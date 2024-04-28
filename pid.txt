@@ -1,0 +1,2 @@
+/home/chemistry1/.bashrc: line 1: ^R: command not found
+427350
