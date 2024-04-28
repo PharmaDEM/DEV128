@@ -24,7 +24,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <div class="container">
   <div class="row">
     <div class="col-sm-5">
-    <img src="http://128.199.31.121/logoside.png" style="border-radius: 25px;" />
+    <img src="http://139.59.95.53/logoside.png" style="border-radius: 25px;" />
     
       <!-- Content for the first column -->
     </div>
@@ -38,7 +38,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
     <div class="login-box">
   <div class="login-logo">
    <!-- /.<a href="<?php echo url('/') ?>"><?php echo setting('company_name') ?></a> -->
-    <img src="http://128.199.31.121/assets/img/logo-new11.png" style="max-width:280px;" />
+    <img src="http://139.59.95.53/assets/img/logo-new11.png" style="max-width:280px;" />
 
    <div style="font-family: 'Lato', sans-serif;"> <span class="blue-text">Solu</span><span class="green-text">DEM</span> </div>
 

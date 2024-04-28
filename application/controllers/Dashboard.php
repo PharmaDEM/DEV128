@@ -23,11 +23,9 @@ class Dashboard extends MY_Controller {
 		$this->page_data['user_count'] = $this->db->count_all('users');
 		$this->page_data['pending_projects'] = $this->projects_model->getPendingProjects();
 		$this->page_data['pendingJobCount'] = $this->projects_model->getPendingqJobCount();
-		$queryJobsMaster = $this->db->query("SELECT COUNT(*) AS num_records FROM jobs_master WHERE cosmo_status = 'Processing'");
-		$this->page_data['pendingDMFileJobCount'] = $queryJobsMaster->row()->num_records;
-       
 
-		$ssh = new Net_SSH2('128.199.31.121',22);
+
+		$ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -45,7 +43,7 @@ class Dashboard extends MY_Controller {
 
 	public function getload()
 	{
-		$ssh = new Net_SSH2('128.199.31.121',22);
+		$ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}

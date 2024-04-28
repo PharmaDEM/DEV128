@@ -133,11 +133,11 @@ button:hover {
 <div class="">
 
 <select class="form-control" name="solvents" id="solvents">
-    <option value="">Select Job Type</option>
-    <option value="Pure_68">Pure_68</option>
-    <option value="Binary_1085">Binary_2278</option>
-    <option value="Tertiary-16400">Tertiary-50116</option>
-</select>
+                                            <option value="">Select Job Type</option>
+                                            <option value="Pure_68">Pure_68</option>
+                                            <option value="Binary_1085">Binary_2278</option>
+                                            <option value="Tertiary-16400">Tertiary-50116</option>
+                                        </select>
 
 </div>
 <br>
@@ -168,8 +168,6 @@ button:hover {
         
         <!-- /.row -->
         <!-- END CUSTOM TABS -->
-    <div id="cosmo"></div>
-    <div id="cosmoq"></div>
 
 </section>
 
@@ -191,7 +189,7 @@ $(document).ready(function() {
     var sids = $('#targetSelect').val();
     var type = $('#solvents').val();
     var jid = <?php echo $jstatus[0]->id ?>;
-  
+
     $.ajax({
       url: '<?php echo url('projects/customcalulation') ?>',
       type: 'post',
@@ -201,36 +199,6 @@ $(document).ready(function() {
         jobid: jid
       },
       success: function(response) {
-        if(response=="not done") {
-
-        }
-        if(response=="Pending") {
-         
-          document.getElementById('cosmo').innerHTML="<h3 style=color:red>Already one of job is running, you have wait until its finished to run next activity... </h3>"; 
-
-          // Call the controller function here
-          $.ajax({
-                  url: '<?php echo url('projects/addcustomjobqueue') ?>',
-                  type: 'post',
-                  data: {
-                    ids: sids,
-                    jtype: type,
-                    jobid: jid
-                  },
-                  success: function(response) {
-                    if(response=="Queue Added") { 
-                      document.getElementById('cosmoq').innerHTML="<h3 style=color:green>Job Added to Queue... </h3>"; 
-                      window.location.href = '<?php echo url('projects') ?>';
-
-                    }
-                      // Handle the response from the controller function
-                  },
-                  error: function(xhr, status, error) {
-                      // Handle any errors that occur during the AJAX request
-                  }
-              });
-
-        } 
         if (response === "done") { 
           $('#cosmoq').html("<h3 style='color:green'>Custom Calculations Done. </h3>");
           // Remove saved progress on completion
@@ -261,13 +229,11 @@ $(document).ready(function() {
 
     var selectElement = document.getElementById('targetSelect');
     var options = Array.from(selectElement.options);
-
-  if (options.length > 0) {
+  
     options.sort(function(a, b) {
       return a.value - b.value;
     });
   
-
     options.forEach(function(option) {
       selectElement.appendChild(option);
     });
@@ -276,15 +242,12 @@ $(document).ready(function() {
     $("#retrieveIDsButton").attr("disabled", true);
 
     setTimeout(function() {
-     // window.location.href = "<?php echo url('projects') ?>"
+      window.location.href = "<?php echo url('projects') ?>"
     }, 5000);
 
     $('#cstats').html("<h4 style='color:green'>Calculations Started.. </h4>");
 
-   } else {
-        alert("Please copy selected options.");
-        return false; // Prevent form submission
-    }
+   
   });
 
 

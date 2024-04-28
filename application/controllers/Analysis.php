@@ -24,6 +24,73 @@ class Analysis extends MY_Controller {
 		$this->load->view('analysis/details', $this->page_data);
 	}
 
+    public function fetchProjects() {
+       //$this->load->model('ProjectModel');
+        $projects = $this->projects_model->getProjects(); // Implement this function in your model
+        echo json_encode($projects);
+    }
+
+public function final()
+{
+
+    		//$this->page_data['projects'] = $this->projects_model->get();
+		$this->load->view('analysis/final', $this->page_data);
+}
+
+
+public function fetchResults() {
+    $min10cmgml = $this->input->post('min10cmgml');
+    $max10cmgml = $this->input->post('max10cmgml');
+    $min25cmgml = $this->input->post('min25cmgml');
+    $max25cmgml = $this->input->post('max25cmgml');
+    $min50cmgml = $this->input->post('min50cmgml');
+    $max50cmgml = $this->input->post('max50cmgml');
+    $jobId = $this->input->post('jobId');
+    $offset = $this->input->post('offset');
+    $limit = 5000; // Set the limit to fetch 5000 records at a time
+
+    // Load ResultsModel
+    // $this->load->model('ResultsModel');
+    
+    // Call getResults method with provided filters and pagination parameters
+    $results = $this->projects_model->getResultsall($min10cmgml, $max10cmgml, $min25cmgml, $max25cmgml, $min50cmgml, $max50cmgml, $jobId, $limit, $offset);
+
+    // Return results as JSON
+    header('Content-Type: application/json');
+    echo json_encode($results);
+}
+
+
+
+public function fetchJobId() {
+    $projectIdArray = $this->input->post('projectId');
+
+    // Check if $projectIdArray is an array and contains elements
+    if (is_array($projectIdArray) && count($projectIdArray) > 0) {
+        // Get the first element of the array
+        $projectId = $projectIdArray[0];
+    } else {
+        // Set projectId to null or handle the situation accordingly
+        $projectId = null; // or any default value
+    }
+
+    // Debugging the value of $projectId
+    //var_dump($projectId); // Check the type and contents of $projectId
+
+    // Load ProjectsModel
+    //$this->load->model('ProjectsModel');
+
+    // Call getJobIdByProjectId method from ProjectsModel to fetch job_id
+    $jobId = $this->projects_model->getJobIdByProjectId($projectId);
+
+    // Return job_id as JSON response
+    header('Content-Type: application/json');
+    echo json_encode($jobId);
+}
+
+
+
+
     public function scatter() {
 
       
@@ -141,15 +208,18 @@ class Analysis extends MY_Controller {
                     //$solvent_w1_system = array_column($results, 'solvent_w1_solvent_system');
 
                     $solvent_w1_system = array_column($results, 'solvent_w1_solvent_system');
+
                     $result_type = array_column($results, 'result_type');
 
+
                 }
-        
-                // Check if solvent_w1_solvent_system exists in all three arrays
-               if($result_type<>'Tertiary-16400') {
+
+            //print_r($results_10);
+
+            if($result_type<>'Tertiary-16400') {
                 // Check if solvent_w1_solvent_system exists in all three arrays
                 if (!empty($solvent_w1_system) && count(array_filter($solvent_w1_system)) === count($solvent_w1_system)) {
-                }       
+                }		
 
                     // Get the project name
                     $projectName = $this->projects_model->getProjectName($projectId);
@@ -191,170 +261,41 @@ class Analysis extends MY_Controller {
                         'solvent_w1_solvent_system' => $solvent_w1_system,
                     ];
                     if($result_type<>'Tertiary-16400') {
-                        
                         }
                     }       
             }
         }
         
-    echo json_encode(['data' => $data], JSON_PRETTY_PRINT);
+echo json_encode(['data' => $data], JSON_PRETTY_PRINT);
 
 
         
 
-    }
+     }
 
 
-public function generateCsv()
-    {
 
-	set_time_limit(120);
-    	$selectedProjects = $this->input->post('selectedProjects');
+     public function updatecorrect()
+     {
 
-    	$data = [];
+        $id= $_GET['id'];
 
-    	if (!empty($selectedProjects)) {
-    		foreach ($selectedProjects as $projectId) {
-		        // Fetch data for $projectId using your queries
-    			$jbd = $this->projects_model->getJobDetailByproject($projectId);
-		        // Define arrays to hold results for each table for the current project
-    			$results_10 = [];
-    			$results_25 = [];
-    			$results_50 = [];
-		        $solvent_w1_system = []; // Initialize an array to hold solvent_w1_solvent_system values
-
-		        // Loop through the three tables
-		        $tables = ['results_data_10', 'results_data_25', 'results_data_50'];
-		        foreach ($tables as $table) {
-		            // Create a new query for each table
-		        	$this->db->select('
-		        		' . $table . '.*, 
-		        		job_results.s_id AS job_s_id,job_results.result_type, job_results.id AS job_res_id,
-		        		solvents_master.w1_solvent_system AS solvent_w1_solvent_system
-		        		');
-		        	$this->db->from($table);
-		        	$this->db->join('job_results', 'job_results.id = ' . $table . '.result_job_id', 'left');
-		        	$this->db->join('solvents_master', 'solvents_master.s_id = job_results.s_id', 'left');
-		        	$this->db->where($table . '.job_id', $jbd->id);
-		            //$this->db->limit(10);
-
-		            // Execute the query and append results to the respective array
-		        	$query = $this->db->get();
-		        	$results = $query->result();
-		            //print_r($this->db->last_query());    
-		        	if ($table === 'results_data_10') {
-		        		$results_10 = $results;
-		        	} elseif ($table === 'results_data_25') {
-		        		$results_25 = $results;
-		        	} elseif ($table === 'results_data_50') {
-		        		$results_50 = $results;
-		        	}
-
-		            // Extract solvent_w1_solvent_system values and store them in the solvent_w1_system array
-		        	$solvent_w1_system = array_column($results, 'solvent_w1_solvent_system');
-		        }
-
-		        // Check if solvent_w1_solvent_system exists in all three arrays
-		        if (!empty($solvent_w1_system) && count(array_filter($solvent_w1_system)) === count($solvent_w1_system)) {
-		            // Get the project name
-		        	$projectName = $this->projects_model->getProjectName($projectId);
-
-                    $pureDataArray = [
-                        'pure_data1' => '(0.0, 0.1, 0.9)',
-                        'pure_data2' => '(0.0, 0.25, 0.75)',
-                        'pure_data3' => '(0.0, 0.5, 0.5)',
-                        'pure_data4' => '(0.0, 0.75, 0.25)',
-                        'pure_data5' => '(0.0, 0.9, 0.1)',
-                    ];
-
-                    $terDataArray = [
-                        'pure_data1' => '(0.0, 0.1, 0.75, 0.15)',
-                        'pure_data2' => '(0.0, 0.25, 0.50, 0.25)',
-                        'pure_data3' => '(0.0, 0.5, 0.25, 0.25)'
-                    ];
-
-		        	foreach ($solvent_w1_system as $index => $solvent) {
-
-                        $solventName = $results_10[$index]->{'ssystem_name'};
-                       
-                        if ($results_10[$index]->result_type != "Pure_68" && $results_10[$index]->result_type != "Tertiary-16400") {
-                          
-                            $solventName = $solventName . "-" . str_replace("-", $pureDataArray[$results_10[$index]->wt_fraction], $pureDataArray[$results_10[$index]->wt_fraction]);
-
-
-                        } elseif ($results_10[$index]->result_type === "Tertiary-16400") {
-                          
-                            $solventName = $solventName . "-" . str_replace("-", $terDataArray[$results_10[$index]->wt_fraction], $terDataArray[$results_10[$index]->wt_fraction]);
-                        } else {
-                            $solventName = $results_10[$index]->{'ssystem_name'};
-                        }
-
-                        
-		        		$data[$solventName][$projectName] = [
-		        			'10_cmgml' => $results_10[$index]->{'10cmgml'},
-		        			'10_cvl' => $results_10[$index]->{'10cvl'},
-		        			'10_cyl' => $results_10[$index]->{'10cyl'},
-		        			'25_cmgml' => $results_25[$index]->{'25cmgml'},
-		        			'25_cvl' => $results_25[$index]->{'25cvl'},
-		        			'25_cyl' => $results_25[$index]->{'25cyl'},
-                            'results_25_wt_fraction' => $results_25[$index]->{'wt_fraction'},
-                            'results_25_ssystem_name' => $results_25[$index]->{'ssystem_name'},
-                            'results_25_rtype' => $results_10[$index]->{'result_type'},
-		        			'50_cmgml' => $results_50[$index]->{'50cmgml'},
-		        			'50_cvl' => $results_50[$index]->{'50cvl'},
-		        			'50_cyl' => $results_50[$index]->{'50cyl'},
-                            'results_50_wt_fraction' => $results_50[$index]->{'wt_fraction'},
-                            'results_50_ssystem_name' => $results_50[$index]->{'ssystem_name'},
-                            'results_50_rtype' => $results_10[$index]->{'result_type'},
-		        		];
-		        	}
-		        }
-		    }
-		}
-		// dd($data);
-
-		// Generate CSV data
-
-		$delimiter = ','; // Define the delimiter
-
-		$csvData = "Solvent Name" . $delimiter;
-		$projects = array_keys($data[array_key_first($data)]);
-		foreach ($projects as $project) {
-			$csvData .= "$project (10Cmgml){$delimiter}$project (10Cvl){$delimiter}$project (10Cyl){$delimiter}$project(25Cmgml){$delimiter}$project (25Cvl){$delimiter}$project (25Cyl){$delimiter}$project (50Cmgml){$delimiter}$project (50Cvl){$delimiter}$project (50Cyl){$delimiter}";
-		}
-		$csvData = rtrim($csvData, $delimiter) . "\n";
-		foreach ($data as $solvent => $projects) {
-           
-		    // Encapsulate entire CSV field containing the solvent name in double quotes
-			$csvData .= '"' . str_replace('"', '""', $solvent) . '"' . $delimiter;
-			foreach ($projects as $project => $results) {
-				// $csvData .= "{$results['result_10']}{$delimiter}{$results['result_25']}{$delimiter}{$results['result_50']}{$delimiter}";
-				$csvData .= "{$results['10_cmgml']}{$delimiter}{$results['10_cvl']}{$delimiter}{$results['10_cyl']}{$delimiter}{$results['25_cmgml']}{$delimiter}{$results['25_cvl']}{$delimiter}{$results['25_cyl']}{$delimiter}{$results['50_cmgml']}{$delimiter}{$results['50_cvl']}{$delimiter}{$results['50_cyl']}{$delimiter}";
-			}
-			$csvData = rtrim($csvData, $delimiter) . "\n";
-		}
-
-		// Set headers for CSV download
-		// header('Content-Type: application/csv');
-		header('Content-Type: application/json');
-		// header('Content-Disposition: attachment; filename="project_results.csv"');
-
-		// Output CSV data
-		echo json_encode(['csvData' => $csvData]);
-		// echo $csvData;
-	}     
+        $this->db->update('projects', array('optimised' => 'Yes'), array('id' => $id));
+        
+     }
+     
      public function get1050() {
 
 
         $rawData = file_get_contents('php://input');
-$data = json_decode($rawData, true);
+        $data = json_decode($rawData, true);
 
 
 
-$processedResults = array();
-    $allBatchesProcessed = false; // Initialize a flag
+        $processedResults = array();
+        $allBatchesProcessed = false; // Initialize a flag
 
-$batchSize = 100; // Define your desired batch size
+        $batchSize = 100; // Define your desired batch size
 
 if (is_array($data)) {
     $i = 0;
@@ -861,7 +802,7 @@ $data = [
           $ycyl=$this->input->post('xRange');
           $xcvl=$this->input->post('yRange');
           
-        $jbd = $this->projects_model->getJobdetails($project_id);
+		$jbd = $this->projects_model->getJobdetails($project_id);
 
 
         if($tempa==50) {
@@ -943,9 +884,9 @@ $this->db->where('results_data_50.50cvl <=', (float) $ycyl);
         echo json_encode($dataPoints);
            }
 
-    //print_r($this->db->last_query()); 
+    //print_r($this->db->last_query());	
 
     }
-    
+
 
 }

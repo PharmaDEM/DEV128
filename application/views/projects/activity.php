@@ -266,7 +266,6 @@ if(document.getElementById('solvents').value=="") {
                 success: function(response) {
                   if(response=="Queue Added") { 
                     document.getElementById('cosmoq').innerHTML="<h3 style=color:green>Job Added to Queue... </h3>"; 
-                    window.location.href = '<?php echo url('projects') ?>';
 
                   }
                     // Handle the response from the controller function

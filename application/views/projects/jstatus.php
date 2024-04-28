@@ -102,14 +102,9 @@ echo $diff->s.' Seconds<br>';
  <?php if(!$this->projects_model->checkactivityexists($jstatus[0]->project_id)) { ?>
  <a href="<?php echo url('projects') ?>/activity/<?php echo $jstatus[0]->id;?>" class="btn btn-warning btn-sm">Run Solubility For This DEM File</a>
  <a href="<?php echo url('projects') ?>/custom/<?php echo $jstatus[0]->id;?>" class="btn btn-success btn-sm">Run Custom Solubility For This DEM File</a>
-
- 
-  <?php } else { echo "<h3 style=color:green>Already Acitivity is Finished, Please Check Results</h3>";}?>
-    <a href="<?php echo url('projects') ?>/phSolubility/<?php echo $jstatus[0]->id;?>" class="btn btn-info btn-sm">pH and Biorelevant Solubility</a>
-
-
+  <?php } else { echo "<h3 style=color:green>Already Acitivity is Finished, Please Check Results</h3>";}?>                          
                           <?php } ?><hr>
-                            <?php if($jstatus[0]->cosmo_status=="Processing" || $jstatus[0]->cosmo_status=="Pending") { ?>
+                            <?php if($jstatus[0]->cosmo_status=="Processing") { ?>
                               <div id="cosmo"><a href="#" onclick="updateUserStatus('<?php echo $jstatus[0]->id ?>')" class="btn btn-success btn-sm">Check Job Status</a></div>
                               <div id="loading-image" style="display:none">Please Wait...<img src="<?php echo base_url();?>icons8-dots-loading.gif" /></div>
                               <?php

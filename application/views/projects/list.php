@@ -96,33 +96,18 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                 <h3 class="card-title p-3"><?php echo lang('projects') ?></h3>
                 <div class="ml-auto p-2">
                     <?php if (hasPermissions('project_add')): ?>
-            <a href="<?php echo url('projects/killqueueall') ?>" class="btn btn-primary btn-sm"><span class="pr-1"></span> Kill all Queue Jobs </a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					<a href="<?php echo url('projects/killall') ?>" class="btn btn-primary btn-sm"><span class="pr-1"></span> Kill all Active Jobs </a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-						<a href="<?php echo url('projects/del') ?>" class="btn btn-primary btn-sm"><span class="pr-1"></span> Kill DEM Jobs</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<a href="<?php echo url('projects/killall') ?>" class="btn btn-primary btn-sm"><span class="pr-1"></span> Kill all Active Jobs </a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+						<a href="<?php echo url('projects/del') ?>" class="btn btn-primary btn-sm"><span class="pr-1"></span> Kill DEM Jobs</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                       <a href="<?php echo url('projects/add') ?>" class="btn btn-primary btn-sm"><span class="pr-1"><i class="fa fa-plus"></i></span> <?php echo lang('project_add') ?></a>
                     <?php endif ?>
                 </div>
               </div>
               <div id="overlay">
-    
   <div id="processing-message">Processing...</div>
-
 </div>
 
               <!-- /.card-header -->
               <div class="card-body">
-                 <div class="row">
-                    Filter: &nbsp; &nbsp;<div class="com-md-6">
-                     <select class="form-control" onchange="getProject(this.value);">
-                        <option value="0" <?php  echo (@$_GET['type'] =='') ? 'selected' : '' ?>>All</option>
-                        <option value="1" <?php echo  (@$_GET['type'] =='progress') ? 'selected' : '' ?>>Job In Progress</option>
-                        <option value="2" <?php echo  (@$_GET['type'] =='dmfile') ? 'selected' : '' ?>>DM File In process</option>
-                        <option value="3" <?php echo (@$_GET['type'] =='queue') ? 'selected' : '' ?>>Job In Queue</option>
-                      
-                     </select>
-                    </div>
-                 </div>
-                 <br>
                 <table id="example1" class="table table-bordered table-hover table-striped">
                   <thead>
                   <tr>
@@ -138,7 +123,6 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                   </tr>
                   </thead>
                   <tbody>
-                 
                   <?php foreach ($projects as $row): ?>
                     <tr>
                       <td width="60"><?php echo $row->id ?></td>
@@ -168,41 +152,28 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                           ?>
                           <a href="<?php echo url('projects') ?>/jstatus/<?php echo $row->id;?>" class="btn btn-warning btn-sm">Check Status</a>
                         
-                        <?php } 
-                        } ?>
+                        <?php } } ?>
                       </td>
                       <td>
                         <?php
                         $checkjob = $this->projects_model->checkjobcompleted($row->id);
                         $checkjobinserts = $this->projects_model->checkjobinserts($row->id);
-
-                        
-                        /*$jobExistsq = $this->projects_model->checkJobExistsinQueue($row->id);
-                        $data['jobExistsq'] = $jobExistsq;*/
-
-                        $jobExistsq = $this->projects_model->checkJobinQueue($row->id);
+                        $jobExistsq = $this->projects_model->checkJobExistsinQueue($row->id);
                         $data['jobExistsq'] = $jobExistsq;
-
-                        $queryJobsMaster = $this->db->query("SELECT COUNT(*) AS num_records FROM jobs_master WHERE  project_id = $row->id and cosmo_status = 'Processing'");
-                        $pendingDMFileJobCount = $queryJobsMaster->row()->num_records;
                             //print_r($jobExistsq);
                             //echo $jobExistsq;
                         //echo $checkjob;
                         //print_r($checkjob);
                         ?>
-                        <?php if ($pendingDMFileJobCount > 0): ?>
-                           <a href="" class="btn btn-sm btn-info" title="DM File In process..." data-toggle="tooltip"><i class="fa fa-spinner"></i></a>
-                          <?php endif; ?>
                         <?php if ($jobExistsq): ?>
                           <a href="" class="btn btn-sm btn-warning" title="In Queue..." data-toggle="tooltip"><i class="fas fa-clock"></i></a>
-                           
-                          <?php else: ?>
-                              
-                          <?php endif; ?>
-                                  
+<?php else: ?>
+    
+<?php endif; ?>
+                         
                       <?php if($this->projects_model->checkactivityexists($row->id)) { ?>
                       <a href="<?php echo url('projects') ?>/results/<?php echo $row->id;?>" class="btn btn-success btn-sm" title="Check Results"><i class="fas fa-layer-group"></i></a>
-                        <?php if($checkjob==0 ) {  ?>
+                        <?php if($checkjob==0) {  ?>
                           <div id="loading-image" style="display:"><img src="<?php echo base_url();?>icons8-dots-loading.gif" /></div>
                           <?php } else { ?>
                             <!-- /. <a href="<?php echo url('projects/createdata/'.$row->id) ?>" class="btn btn-sm btn-primary" title="Create Data" data-toggle="tooltip"><i class="fas fa-clipboard"></i></a>  -->
@@ -213,7 +184,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
                             <?php $opcheck = $this->projects_model->getprojectdetails($row->id); ?>
                               <?php if($opcheck[0]->optimised=='Yes') { ?>
-                              <a href="<?php echo url('projects/showcreateddata/'.$row->id) ?>" class="btn btn-sm btn-info" title="Show Data" data-toggle="tooltip"><i class="fas fa-list-alt"></i></a>
+                              <!-- <a href="<?php echo url('projects/showcreateddata/'.$row->id) ?>" class="btn btn-sm btn-info" title="Show Data" data-toggle="tooltip"><i class="fas fa-list-alt"></i></a> -->
                       <?php } else { ?>
                         <button class="button-90 btn btn-sm btn-primary" data-id="<?php echo $row->id;?>" title="Create Data" data-toggle="tooltip"><i class="fas fa-cogs"></i></button> 
 
@@ -222,23 +193,11 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
                             <button class="button-80 btn btn-sm btn-primary" title="Create Data" data-toggle="tooltip"><i class="fas fa-plus"></i></button> 
 
-                            
-
                             <?php } ?>
-                            <a href="<?php echo url('projects/solubilityCorrection/'.$row->id) ?>" class="btn btn-sm btn-info" title="Solubility Correction" data-toggle="tooltip"><i class="fas fa-check"></i></a>
-
                            <div id="ptext"></div>
                            <?php } } ?>
-                           <?php
-                             $jobexist = $this->projects_model->getJobdetails($row->id);
-                           ?>
-                           <?php if ($jobexist) {
-                            ?>
-                           <a href="<?php echo url('projects/addSolubiltiy/'.$jobexist[0]->id) ?>" class="btn btn-sm btn-secondary" title="Add Solubility for Correction" data-toggle="tooltip"><i class="fa fa-edit"></i></a>
-                         <?php } ?>
                     </td>
                        
-
                       <!-- /.
                       <td>
                         <?php if (hasPermissions('users_edit')): ?>
@@ -257,11 +216,8 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                       </td> -->
                     </tr>
                   <?php endforeach ?>
-                  
-
                   </tbody>
                 </table>
-                
               </div>
               <!-- /.card-body -->
             </div>
@@ -281,18 +237,6 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
 
 <script>
-
-function getProject(type){
-    if(type=='1'){
-       window.location.href = '<?php echo url('projects?type=progress') ?>';
-    } else if(type=='2'){
-       window.location.href = '<?php echo url('projects?type=dmfile') ?>';
-    } else if(type=='3'){
-       window.location.href = '<?php echo url('projects?type=queue') ?>';
-    } else{
-      window.location.href = '<?php echo url('projects') ?>';
-    }
-}
 $('#overlay').hide();
 
 $('.button-90').click(function () {

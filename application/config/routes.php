@@ -53,8 +53,6 @@ $route['default_controller'] = 'dashboard';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 $route['app/smt/croncontroller'] = 'smt/Croncontroller';
-$route['app/smt/CronQueucontroller'] = 'smt/CronQueucontroller';
-
 
 //$route['record-count'] = 'Projects/get_record_count'; // replace my_controller with the name of your controller
 

@@ -41,7 +41,7 @@ public function checkcosmo() {
 
 public function checkjob($id)
 	{
-		//$connection = @ssh2_connect('128.199.31.121', 22);
+		//$connection = @ssh2_connect('139.59.95.53', 22);
 	
 
 		//$this->projects_model->update($id, ['status' => get('status') == 'true' ? 1 : 0 ]);
@@ -78,40 +78,7 @@ public function checkjob($id)
 		
 		//redirect('projects/submit/'.$project_code);
 		}
-		else {
-            $jobdetails = $this->projects_model->getJobstatus($id);
-            $fullname=$jobdetails[0]->inp_filename;
-            $Smile=$jobdetails[0]->smiles;
-            $mvalue=$jobdetails[0]->inp_value;
-            $fname = pathinfo($fullname, PATHINFO_FILENAME);
-            $sftp = new Net_SFTP('128.199.31.121',22);
-                if (!$sftp->login('chemistry1', 'Ravi@1234')) {
-                exit('Login Failed');
-                }
-
-            $directory_path = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/'.$fname; // the path of the directory you want to check
-
-            if ($sftp->file_exists($directory_path)) { // check if the directory exists
-                echo "not done";
-            }
-
-             
-            chmod("/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/$fullname", 0777);
-
-            $contentf = $fname."\t".$Smile."\t".$mvalue;
-            $ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; touch '.$fullname.'; echo "'.$contentf.'" >> '.$fullname.'');
-            $ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; nohup python3 ConformerGenerator.py --structures_file '.$fullname.' --n_cores=16 > t.log 2>&1 & echo $!');
-
-
-            $data = [
-                'cosmo_status   ' => 'Processing',
-            ];
-            $this->db->where('id', $id);
-            $this->db->update('jobs_master', $data);
-            echo 'done';
-
-
-        }
+		else {echo "not done";}
 
 		
 	}

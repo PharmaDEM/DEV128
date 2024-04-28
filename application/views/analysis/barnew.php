@@ -7,12 +7,30 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-<style type="text/css">
-    	#dataTable td{
-    		font-size: 10px !important;
-    	}
-    </style>
+    <style>
 
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: fit-content;
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 30px;
+  overflow: hidden;
+}
+.loader::before {
+  content: "Loading...";
+  color: #0000;
+  text-shadow: 0 0 0 #000,10ch 0 0 #fff,20ch 0 0 #000;
+  background: linear-gradient(90deg,#0000 calc(100%/3),#000 0 calc(2*100%/3),#0000 0) left/300% 100%;
+  animation: l23 2s infinite;
+}
+
+@keyframes l23{
+  50% {background-position: center;text-shadow: -10ch 0 0 #000,    0 0 0 #fff,10ch 0 0 #000}
+  100%{background-position: right ;text-shadow: -20ch 0 0 #000,-10ch 0 0 #fff,   0 0 0 #000}
+}
+
+</style> 
 <!-- Content Header (Page header) -->
 <section class="content-header">
       <div class="container-fluid">
@@ -57,7 +75,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                    </div>
                    <div class="card-body">
                        <form id="myForm" method="post" action="<?= base_url('analysis/generate') ?>">
-                        
+
                        <div class="form-group">
     <label for="set1_start">Select Projects </label>
     <select name="project_id[]" id="project_id" class="form-control select2" required multiple size="10">
@@ -93,6 +111,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
    
 
     
+   <div class="loader" id="loadingc" style="display:none"></div>
 
 <div style="max-height: 800px; /* Set the maximum height for vertical scrollbar */
   overflow-y: auto; /* Enable vertical scrollbar when content overflows */
@@ -117,7 +136,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
             </div>
 
        
-            <canvas id="barChart" width="1000" height="500" ></canvas>
+            <canvas id="barChart" width="1000" height="500"></canvas>
 
 
       		</div>
@@ -180,6 +199,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
             }
 
             $('#fetchDataButton').prop('disabled', true);
+            $('#loadingc').show();
 
             $.ajax({
                 type: "POST",
@@ -198,15 +218,15 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                     'pure_data3': '(0.0, 0.5, 0.5)',
                     'pure_data4': '(0.0, 0.75, 0.25)',
                     'pure_data5': '(0.0, 0.9, 0.1)'
-                    };
+                };
 
-                    var terDataArray = {
+                var terDataArray = {
 
-                        'pure_data1': '(0.0, 0.1, 0.75, 0.15)',
-                        'pure_data2': '(0.0, 0.25, 0.50, 0.25)',
-                        'pure_data3': '(0.0, 0.5, 0.25, 0.25)'
+                    'pure_data1': '(0.0, 0.1, 0.75, 0.15)',
+                    'pure_data2': '(0.0, 0.25, 0.50, 0.25)',
+                    'pure_data3': '(0.0, 0.5, 0.25, 0.25)'
 
-                    }
+                }
 
 
                     // Create the header row dynamically
@@ -218,13 +238,18 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                         headerRow.push(projectName + ' (10cmgml)');
                         headerRow.push(projectName + ' (25cmgml)');
                         headerRow.push(projectName + ' (50cmgml)');
-                        headerRow.push(projectName + ' 10 CVL');
-                        headerRow.push(projectName + ' 25 CVL');
-                        headerRow.push(projectName + ' 50 CVL');
+                        // headerRow.push(projectName + ' 10 CVL');
+                        // headerRow.push(projectName + ' 25 CVL');
+                        // headerRow.push(projectName + ' 50 CVL');
 
-                        headerRow.push(projectName + ' 10 Yeild');
-                        headerRow.push(projectName + ' 25 Yeild');
-                        headerRow.push(projectName + ' 50 Yeild');
+                        // headerRow.push(projectName + ' 10 Yeild');
+                        // headerRow.push(projectName + ' 25 Yeild');
+                        // headerRow.push(projectName + ' 50 Yeild');
+
+                        // headerRow.push(projectName + ' 10 WT');
+                        // headerRow.push(projectName + ' 25 WT');
+                        // headerRow.push(projectName + ' 50 WT');
+
 
                         //headerRow.push(projectName + ' System Name');
 
@@ -245,30 +270,21 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
                         // Add "Solvent Name" in the first column
                         var solventName = projectsData[0].results_10_ssystem_name[i] || '';
-                        console.log(projectsData);
                         //dataRow.push(solventName);
                      
-                        if (solventName) {
-                            if ((projectsData[0].results_10_rtype[i] != "Pure_68") && (projectsData[0].results_10_rtype[i] != "Tertiary-16400")) {
-                                if (pureDataArray[projectsData[0].results_10_wt_fraction[i]]) {
-                                    dataRow.push(solventName + "-" + pureDataArray[projectsData[0].results_10_wt_fraction[i]].replace("-", pureDataArray[projectsData[0].results_10_wt_fraction[i]]));
-                                } else {
-                                    dataRow.push(solventName);
-                                }
-                            } else if (projectsData[0].results_10_rtype[i] === "Tertiary-16400") {
-                                if (terDataArray[projectsData[0].results_10_wt_fraction[i]]) {
-                                    dataRow.push(solventName + "-" + terDataArray[projectsData[0].results_10_wt_fraction[i]].replace("-", terDataArray[projectsData[0].results_10_wt_fraction[i]]));
-                                } else {
-                                    dataRow.push(solventName);
-                                }
-                            } else {
-                                dataRow.push(solventName);
-                            }
-                        } else {
-                            console.error("Solvent name is undefined or null for  " + (i + 1));
-                            dataRow.push('');
+                        if ((projectsData[0].results_10_rtype[i] != "Pure_68")  && (projectsData[0].results_10_rtype[i] != "Tertiary-16400")){
+                            // Concatenate solventName with the modified value and push into dataRow
+                            dataRow.push(solventName + "-" + pureDataArray[projectsData[0].results_10_wt_fraction[i]].replace("-", pureDataArray[projectsData[0].results_10_wt_fraction[i]]));
                         }
-                        
+                        else if (projectsData[0].results_10_rtype[i] === "Tertiary-16400") {
+                            // Concatenate solventName with the modified value and push into dataRow
+                            dataRow.push(solventName + "-" + terDataArray[projectsData[0].results_10_wt_fraction[i]].replace("-", terDataArray[projectsData[0].results_10_wt_fraction[i]]));
+                        }
+                        else {
+                            dataRow.push(solventName);
+                        }
+
+                   
 
                         // Add result values for each project and unit (10cmgml, 25cmgml, 50cmgml)
                         for (var j = 0; j < projectsData.length; j++) {
@@ -284,62 +300,39 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                             var results_10cyl = projectData.results_10_10cyl[i] || '';
                             var results_25cyl = projectData.results_25_25cyl[i] || '';
                             var results_50cyl = projectData.results_50_50cyl[i] || '';
+
+                            var results_10wt = projectData.results_10_wt_fraction[i] || '';
+                            var results_25wt = projectData.results_25_wt_fraction[i] || '';
+                            var results_50wt = projectData.results_50_wt_fraction[i] || '';
                         
 
-                            if (!isNaN(parseFloat(results_10))) {
-                               dataRow.push(parseFloat(results_10).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                            if (!isNaN(parseFloat(results_25))) {
-                               dataRow.push(parseFloat(results_25).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                            if (!isNaN(parseFloat(results_50))) {
-                               dataRow.push(parseFloat(results_50).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                            if (!isNaN(parseFloat(results_10cvl))) {
-                               dataRow.push(parseFloat(results_10cvl).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                            if (!isNaN(parseFloat(results_25cvl))) {
-                               dataRow.push(parseFloat(results_25cvl).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                            if (!isNaN(parseFloat(results_50cvl))) {
-                               dataRow.push(parseFloat(results_50cvl).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                            if (!isNaN(parseFloat(results_10cyl))) {
-                               dataRow.push(parseFloat(results_10cyl).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                            if (!isNaN(parseFloat(results_25cyl))) {
-                               dataRow.push(parseFloat(results_25cyl).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                            if (!isNaN(parseFloat(results_50cyl))) {
-                               dataRow.push(parseFloat(results_50cyl).toFixed(3)); 
-                            } else {
-                                dataRow.push(null);
-                            }
-                                                        
-                           /* dataRow.push(parseFloat(results_25).toFixed(3)); 
-                            dataRow.push(parseFloat(results_50).toFixed(3)); 
-                            dataRow.push(parseFloat(results_10cvl).toFixed(3)); 
-                            dataRow.push(parseFloat(results_25cvl).toFixed(3)); 
-                            dataRow.push(parseFloat(results_50cvl).toFixed(3)); 
-                            dataRow.push(parseFloat(results_10cyl).toFixed(3)); 
-                            dataRow.push(parseFloat(results_25cyl).toFixed(3)); 
-                            dataRow.push(parseFloat(results_50cyl).toFixed(3)); */
+                            dataRow.push(results_10);
+                            dataRow.push(results_25);
+                            dataRow.push(results_50);
+                            // dataRow.push(results_10cvl);
+                            // dataRow.push(results_25cvl);
+                            // dataRow.push(results_50cvl);
+                            // dataRow.push(results_10cyl);
+                            // dataRow.push(results_25cyl);
+                            // dataRow.push(results_50cyl);
+                            // if(projectData.results_10_rtype[i] === "Pure_68") {
+                            //     dataRow.push(""); // Push empty string
+                            //     dataRow.push(""); // Push empty string
+                            //     dataRow.push(""); // Push empty string
+                            // }  
+                            // else  if(projectData.results_10_rtype[i] === "Tertiary-16400") {
+                            //     dataRow.push(""); // Push empty string
+                            //     dataRow.push(""); // Push empty string
+                            //     dataRow.push(""); // Push empty string
+                            // }  
+                            
+                            // else {
+                            //     dataRow.push(pureDataArray[results_10wt].replace("Data @", pureDataArray[results_10wt]));
+                            //     dataRow.push(pureDataArray[results_25wt].replace("Data @", pureDataArray[results_25wt]));
+                            //     dataRow.push(pureDataArray[results_50wt].replace("Data @", pureDataArray[results_50wt]));
+                            // }
+                                
+
                         }
 
                         //var systemName = projectsData[0].results_10_ssystem_name[i] || '';
@@ -355,6 +348,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                     $('#filterButton').prop('disabled', false);
                     $('#fetchDataButton').prop('disabled', false);
                     tableData = table.rows({ search: 'applied' }).data().toArray();
+                    $('#loadingc').hide();
 
                     //createOrUpdateChart(tableData);
 
@@ -396,40 +390,16 @@ function createDataTable(projectsData, tableData) {
     for (var i = 0; i < projectsData.length; i++) {
         var projectName = projectsData[i].projectName;
         headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_10cmgml_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_10cmgml_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
+            '<input type="number" id="' + projectName + '_10cmgml_max" class="project-filter" data-project="' + projectName + '" placeholder="Max">' +
+            '<input type="number" id="' + projectName + '_10cmgml_max" class="project-filter" data-project="' + projectName + '" placeholder="Min">' +
             '</th>';
         headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_25cmgml_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_25cmgml_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
+            '<input type="number" id="' + projectName + '_25cmgml_max" class="project-filter" data-project="' + projectName + '" placeholder="Max">' +
+            '<input type="number" id="' + projectName + '_25cmgml_min" class="project-filter" data-project="' + projectName + '" placeholder="Min">' +
             '</th>';
         headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_50cmgml_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_50cmgml_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
-            '</th>';
-         headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_10cvl_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_10cvl_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
-            '</th>';
-        headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_25cvl_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_25cvl_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
-            '</th>';
-        headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_50cvl_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_50cvl_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
-            '</th>';
-         headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_10cyl_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_10cyl_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
-            '</th>';
-        headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_25cyl_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_25cyl_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
-            '</th>';
-        headerRowHtml += '<th>' +
-            '<input type="number" id="' + projectName + '_50cyl_max" class="project-filter form-control" data-project="' + projectName + '" placeholder="Max">' +
-            '<input type="number" id="' + projectName + '_50cyl_min" class="project-filter form-control" data-project="' + projectName + '" placeholder="Min">' +
+            '<input type="number" id="' + projectName + '_50cmgml_max" class="project-filter" data-project="' + projectName + '" placeholder="Max">' +
+            '<input type="number" id="' + projectName + '_50cmgml_min" class="project-filter" data-project="' + projectName + '" placeholder="Min">' +
             '</th>';
     }
     headerRowHtml += '</tr>';
@@ -451,7 +421,6 @@ function createDataTable(projectsData, tableData) {
     paging: false,
     dom: '<"top"iBf>rt<"bottom"lp><"clear">',
     buttons: [
-        'colvis', 
         {
             text: 'Filter',
             action: function () {
@@ -470,35 +439,6 @@ function createDataTable(projectsData, tableData) {
         },
         {
             text: 'CSV',
-	            	action: function () {
-					    var selectedProjects = Array.from(document.querySelectorAll("#project_id option:checked")).map(function (option) {
-				            return option.value;
-				        });
-				        $.ajax({
-						    type: "POST",
-						    url: "<?php echo site_url('analysis/generateCsv'); ?>",
-						    data: { selectedProjects: selectedProjects },
-						    dataType: "json",
-						    success: function (response) {
-						        // Convert the CSV data to a Blob
-						        var blob = new Blob([response.csvData], { type: 'text/csv' });
-						        
-						        // Create a temporary link element
-						        var link = document.createElement('a');
-						        link.href = window.URL.createObjectURL(blob);
-						        
-						        // Set the filename for the download
-						        link.download = 'project_results.csv';
-						        
-						        // Trigger the download
-						        link.click();
-						    },
-						    error: function () {
-						        alert("Error fetching data.");
-						    }
-						})
-	                    // window.location = "<?php echo url('/projects/generatePdf/') ?>"+job_id;
-	                },
             extend: 'csvHtml5',
             exportOptions: {
                 rows: ':visible',
@@ -531,15 +471,14 @@ function createDataTable(projectsData, tableData) {
     table.row(table.rows().length - 1).remove().draw();
 }
 
-        function applyFiltersAndRedraw() {
+function applyFiltersAndRedraw() {
     // Get filter values and update the DataTable
     var filterValues = {};
     var filterApplied = false; // Track if any filters are applied
 
     $('.project-filter').each(function () {
         var project = $(this).data('project');
-        //var units = ['10cmgml', '25cmgml', '50cmgml'];
-	var units = ['10cmgml', '25cmgml', '50cmgml','10cvl', '25cvl', '50cvl','10cyl', '25cyl', '50cyl'];
+        var units = ['10cmgml', '25cmgml', '50cmgml'];
         var projectFilters = {};
 
         for (var i = 0; i < units.length; i++) {
@@ -561,7 +500,6 @@ function createDataTable(projectsData, tableData) {
     // Apply filters based on filterValues
     table.rows().every(function () {
         var data = this.data();
-        var solventName = data[0];
         var showRow = true;
 
         for (var project in filterValues) {
@@ -596,14 +534,14 @@ function createDataTable(projectsData, tableData) {
 
     // Get the filtered data after applying filters
     tableData = table.rows({ filter: 'applied' }).data().toArray();
-//console.log(tableData);
+    console.log(tableData);
     // Update the chart with the filtered data
     //createOrUpdateChart(tableData);
 
     // Update the chart based on the filtered data
     if (!filterApplied) {
         // If no filters are applied, show all data on the chart
-        //resetChart();
+        resetChart();
     }
 }
 
@@ -677,21 +615,8 @@ datasets = [];
     });
 }
 
- const plugin = {
-  id: 'customCanvasBackgroundColor',
-  beforeDraw: (chart, args, options) => {
-    const {ctx} = chart;
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-over';
-    ctx.fillStyle = options.color || '#99ffff';
-    ctx.fillRect(0, 0, chart.width, chart.height);
-    ctx.restore();
-  }
-}; 
-
         // Create the bar chart
 var ctx = document.getElementById('barChart').getContext('2d');
-
 if (barChart) {
     barChart.destroy(); // Destroy the existing chart if it exists
 }
@@ -722,17 +647,12 @@ barChart = new Chart(ctx, {
             }
         },
         plugins: {
-            customCanvasBackgroundColor: {
-                color: 'white',
-              },
             legend: {
                 display: true, // Display the legend
                 position: 'bottom' // Position the legend at the bottom
             }
         }
-        
-    },
-    plugins: [plugin],
+    }
 });
 
 chartCreated = true;

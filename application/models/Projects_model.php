@@ -37,13 +37,107 @@ protected $tabler = 'sresults';
 
 	}
 
-	public function get_projects_by_ids($project_ids) {
-        return $this->db->select('*')
-                        ->from('projects')
-                        ->where_in('id', $project_ids)
-                        ->get()
-                        ->result();
+
+
+	public function getResultsall($min10cmgml, $max10cmgml, $min25cmgml, $max25cmgml, $min50cmgml, $max50cmgml, $jbid) {
+		$this->db->select('results_data_10.ssystem_name, results_data_10.10cmgml, results_data_25.25cmgml, results_data_50.50cmgml');
+		$this->db->from('results_data_10');
+		$this->db->join('results_data_25', 'results_data_10.ssystem_name = results_data_25.ssystem_name AND results_data_10.job_id = results_data_25.job_id', 'inner');
+		$this->db->join('results_data_50', 'results_data_10.ssystem_name = results_data_50.ssystem_name AND results_data_10.job_id = results_data_50.job_id', 'inner');
+		$this->db->where('results_data_10.job_id', $jbid);
+		$this->db->where('results_data_25.job_id', $jbid);
+		$this->db->where('results_data_50.job_id', $jbid);
+		
+		$this->db->where('results_data_10.10cmgml >=', $min10cmgml, false);
+		$this->db->where('results_data_10.10cmgml <=', $max10cmgml, false);
+		$this->db->where('results_data_25.25cmgml >=', $min25cmgml, false);
+		$this->db->where('results_data_25.25cmgml <=', $max25cmgml, false);
+		$this->db->where('results_data_50.50cmgml >=', $min50cmgml, false);
+		$this->db->where('results_data_50.50cmgml <=', $max50cmgml, false);
+		
+		$query = $this->db->get();
+		//echo $this->db->last_query();
+		if ($query === false) {
+			$error = $this->db->error();
+			log_message('error', 'Database Error: ' . $error['message']);
+			return []; // Return empty array on error
+		}
+		
+		return $query->result_array();
+	}
+	
+	
+	
+	
+
+	// public function getResultsall($min10cmgml, $max10cmgml, $min25cmgml, $max25cmgml, $min50cmgml, $max50cmgml, $jbid) {
+	// 	//echo $jbid;
+
+    //     $results_10 = $this->getDistinctResultsFromTable('results_data_10', '10cmgml', $min10cmgml, $max10cmgml, $jbid);
+    //     $results_25 = $this->getDistinctResultsFromTable('results_data_25', '25cmgml', $min25cmgml, $max25cmgml, $jbid);
+    //     $results_50 = $this->getDistinctResultsFromTable('results_data_50', '50cmgml', $min50cmgml, $max50cmgml, $jbid);
+        
+    //     // Merge and remove duplicates
+    //     $all_results = array_merge($results_10, $results_25, $results_50);
+    //     $unique_results = array_map("unserialize", array_unique(array_map("serialize", $all_results)));
+        
+    //     return $unique_results;
+    // }
+    
+    // Helper method to fetch distinct results from a specific table
+    private function getDistinctResultsFromTable($table, $column, $min, $max, $jbid) {
+		$this->db->distinct();
+		$this->db->select('*'); // Select all columns from the main table
+		$this->db->from($table);
+		$this->db->join('job_results', 'job_results.job_id = ' . $table . '.job_id', 'left'); // Join with job_results table
+		$this->db->where($table . '.job_id', $jbid); // Filter by job_id from the main table
+		$this->db->where($column . ' >=', $min); // Filter by the specified column and min value
+		$this->db->where($column . ' <=', $max); // Filter by the specified column and max value
+		$query = $this->db->get();
+
+        //echo $this->db->last_query();
+        // Check for query execution errors
+        if ($query === false) {
+            $error = $this->db->error();
+            log_message('error', 'Database Error: ' . $error['message']);
+            return []; // Return empty array on error
+        }
+        
+        return $query->result_array();
     }
+
+	public function getJobIdByProjectId($projectId) {
+        $this->db->select('jm.id');
+        $this->db->from('projects p');
+        $this->db->join('jobs_master jm', 'p.id = jm.project_id', 'inner');
+        $this->db->where('p.id', $projectId);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            return $query->row()->id; // Return job_id directly
+        } else {
+            return null;
+        }
+    }
+
+	public function getProjects() {
+        $this->db->distinct();
+        $this->db->select('pm.id, pm.project_name');
+        $this->db->from('projects pm');
+        $this->db->join('jobs_master jm', 'pm.id = jm.project_id', 'inner');
+		$query = $this->db->get();
+		//echo $this->db->last_query(); // Output the generated SQL query
+
+		if (!$query) {
+			$error = $this->db->error();
+			log_message('error', 'Database Error: ' . $error['message']);
+			return false; // Or handle the error appropriately
+		}
+		return $query->result_array();
+		
+    }
+
+
 
 	public function getjob_id($id) {
 
@@ -131,273 +225,6 @@ return $last->id;
 
 	}
 
-	public function getJobDetailByproject($id) {
-		$this->db->select('*');
-		$this->db->from('jobs_master');
-		$this->db->where('project_id', $id);
-		$query = $this->db->get();    
-		$result = $query->row();
-		return $result;
-	}
-
-	public function getJobDetail($id) {
-		$this->db->select('*');
-		$this->db->from('jobs_master');
-		$this->db->where('id', $id);
-		$query = $this->db->get();    
-		$result = $query->row();
-		return $result;
-	}
-	
-	public function getSolventDataBySid ($id) {
-		ini_set('memory_limit', '-1');
-		$query = $this->db->query("select 
-			sr.Solvent_System,
-			sr.Solvent_1,
-			sr.Solvent_2,
-			sr.Comp_1,sr.Comp_2 
-			from job_results jr, sresults sr where jr.s_id=sr.solvent_id and jr.id=".$id
-		);
-		$result = $query->row();
-		return $result;
-	}
-	
-	public function getAllResultsTableData($id){
-		ini_set('memory_limit', '-1');
-		$jbd = $this->projects_model->getJobDetail($id);
-		$query = $this->db->query("
-			    select
-			    'results_data_10' AS table_name,
-			    job_id,
-			    ssystem_name,
-			    result_job_id,
-			    `10cmgml` AS cmgml,
-			    `10cvl` AS cvl,
-			    `10cyl` AS cyl
-			FROM
-			    results_data_10
-			WHERE
-			    job_id = $id
-			UNION ALL
-			SELECT
-			    'results_data_25' AS table_name,
-			    job_id,
-			    ssystem_name,
-			    result_job_id,
-			    `25cmgml` AS cmgml,
-			    `25cvl` AS cvl,
-			    `25cyl` AS cyl
-			FROM
-			    results_data_25
-			WHERE
-			    job_id = $id
-			UNION ALL
-			SELECT
-			    'results_data_50' AS table_name,
-			    job_id,
-			    ssystem_name,
-			    result_job_id,
-			    `50cmgml` AS cmgml,
-			    `50cvl` AS cvl,
-			    `50cyl` AS cyl
-			FROM
-			    results_data_50
-			WHERE
-			    job_id = $id;
-
-		");
-		if ($query && $query->num_rows() > 0) {
-		    return $query->result();
-		} else {
-		    return array(); // or handle the case where no rows are found
-		}
-	}
-
-	
-	public function getresultsdataforAll($id)
-	{
-		ini_set('memory_limit', '-1');
-		$jbd = $this->projects_model->getJobDetail($id);
-		$query = $this->db->query("
-			    select 
-			        t1.job_id,
-			        t1.ssystem_name,
-			        t1.result_job_id,
-			        t1.10cmgml AS 10cmgml,
-			        t1.10cvl AS 10cvl,
-			        t1.10cyl AS 10cyl,
-			        t2.25cmgml AS 25cmgml,
-			        t2.25cvl AS 25cvl,
-			        t2.25cyl AS 25cyl,
-			        t3.50cmgml AS 50cmgml,
-			        t3.50cvl AS 50cvl,
-			        t3.50cyl AS 50cyl
-			    FROM (
-			        SELECT 
-			            job_id,
-			            ssystem_name,
-			            result_job_id,
-			            10cmgml,
-			            10cvl,
-			            10cyl
-			        FROM results_data_10
-			        WHERE job_id = " . $jbd->id . "
-			    ) AS t1
-			    LEFT JOIN (
-			        SELECT 
-			            job_id,
-			            ssystem_name,
-			            result_job_id,
-			            25cmgml,
-			            25cvl,
-			            25cyl
-			        FROM results_data_25
-			        WHERE job_id = " . $jbd->id . "
-			    ) AS t2 ON t1.job_id = t2.job_id AND t1.ssystem_name = t2.ssystem_name
-			    LEFT JOIN (
-			        SELECT 
-			            job_id,
-			            ssystem_name,
-			            result_job_id,
-			            50cmgml,
-			            50cvl,
-			            50cyl
-			        FROM results_data_50
-			        WHERE job_id = " . $jbd->id . "
-			    ) AS t3 ON t1.job_id = t3.job_id AND t1.ssystem_name = t3.ssystem_name
-			");
-			if ($query && $query->num_rows() > 0) {
-			    return $query->result();
-			} else {
-			    return array(); // or handle the case where no rows are found
-			}
-	}
-	
-	public function getDataForPdf($id)
-	{
-		ini_set('memory_limit', '-1');
-        	// Define arrays to hold results for each table for the current project
-		$results_10 = [];
-		$results_25 = [];
-		$results_50 = [];
-        $solvent_w1_system = []; // Initialize an array to hold solvent_w1_solvent_system values
-
-        // Loop through the three tables
-        $tables = ['results_data_10', 'results_data_25', 'results_data_50'];
-        foreach ($tables as $key => $table) {
-        	// Create a new query for each table
-        	$this->db->select('
-        		' . $table . '.*');
-        	$this->db->from($table);
-        	$this->db->where($table . '.job_id', $id);
-            //$this->db->limit(10);
-           
-
-            // Execute the query and append results to the respective array
-        	$query = $this->db->get();
-        	$results = $query->result();
-            //print_r($this->db->last_query());    
-        	if ($table === 'results_data_10') {
-        		$results_10 = $results;
-        	} elseif ($table === 'results_data_25') {
-        		$results_25 = $results;
-        	} elseif ($table === 'results_data_50') {
-        		$results_50 = $results;
-        	}
-        }
-
-        foreach ($results_10 as $index => $value) {
-    		$data[] = [
-    			'result_job_id' => $value->{'result_job_id'},
-    			'10_cmgml' => $value->{'10cmgml'},
-    			'25_cmgml' => $results_25[$index]->{'25cmgml'},
-    			'50_cmgml' => $results_50[$index]->{'50cmgml'},
-    		];
-    	}
-        return $data;
-	}
-	
-	public function getDataForExcel($id){
-
-		$jbd = $this->projects_model->getJobDetail($id);
-        // Define arrays to hold results for each table for the current project
-		$results_10 = [];
-		$results_25 = [];
-		$results_50 = [];
-        $solvent_w1_system = []; // Initialize an array to hold solvent_w1_solvent_system values
-
-        // Loop through the three tables
-        $tables = ['results_data_10', 'results_data_25', 'results_data_50'];
-        foreach ($tables as $key => $table) {
-        	if($table == 'results_data_10')
-        	{
-    		    // Create a new query for each table
-    			$this->db->select('
-    				' . $table . '.*, 
-    				job_results.s_id AS job_s_id, job_results.id AS job_res_id,
-    				solvents_master.*
-    				');
-    			$this->db->from($table);
-    			$this->db->join('job_results', 'job_results.id = ' . $table . '.result_job_id', 'left');
-    			$this->db->join('solvents_master', 'solvents_master.s_id = job_results.s_id', 'left');
-    			// $this->db->join('sresults', 'sresults.solvent_id = job_results.s_id', 'left');
-    			$this->db->where($table . '.job_id', $id);
-    		    //$this->db->limit(10);
-        	}
-        	else
-        	{
-        		// Create a new query for each table
-	        	$this->db->select('
-	        		' . $table . '.*, 
-	        		job_results.s_id AS job_s_id, job_results.id AS job_res_id
-	        		');
-	        	$this->db->from($table);
-	        	$this->db->join('job_results', 'job_results.id = ' . $table . '.result_job_id', 'left');
-	        	// $this->db->join('solvents_master', 'solvents_master.s_id = job_results.s_id', 'left');
-	        	// $this->db->join('sresults', 'sresults.solvent_id = job_results.s_id', 'left');
-	        	$this->db->where($table . '.job_id', $id);
-	            //$this->db->limit(10);
-        	}
-           
-
-            // Execute the query and append results to the respective array
-        	$query = $this->db->get();
-        	$results = $query->result();
-            //print_r($this->db->last_query());    
-        	if ($table === 'results_data_10') {
-        		$results_10 = $results;
-        	} elseif ($table === 'results_data_25') {
-        		$results_25 = $results;
-        	} elseif ($table === 'results_data_50') {
-        		$results_50 = $results;
-        	}
-        }
-
-        foreach ($results_10 as $index => $value) {
-
-    		$data[] = [
-
-    			'Solvent_System' => $value->ssystem_name,
-    			'Solvent_1' => $value->solvent1_name,
-    			'Solvent_2' => $value->solvent2_name,
-    			'Solvent_3' => $value->solvent3_name,
-    			'Comp_1' => $value->{'w1_0.1'},
-    			'Comp_2' => $value->{'w1_0.9'},
-    			'Comp_3' => $value->{'w1_0.25'},
-    			'result_job_id' => $value->{'result_job_id'},
-    			'10_cmgml' => $value->{'10cmgml'},
-    			'10_cvl' => $value->{'10cvl'},
-    			'10_cyl' => $value->{'10cyl'},
-    			'25_cmgml' => $results_25[$index]->{'25cmgml'},
-    			'25_cvl' => $results_25[$index]->{'25cvl'},
-    			'25_cyl' => $results_25[$index]->{'25cyl'},
-    			'50_cmgml' => $results_50[$index]->{'50cmgml'},
-    			'50_cvl' => $results_50[$index]->{'50cvl'},
-    			'50_cyl' => $results_50[$index]->{'50cyl'},
-    		];
-    	}
-        return $data;
-	}
 	public function checktempprocess($id,$temp) {
 
 		$this->db->where('job_id', $id);
@@ -441,42 +268,6 @@ return $last->id;
         }
 
 	}
-
-	public function getQueueJobds() {
-	    $this->db->select('job_id');
-	    $this->db->from('tasks_queue');
-	    $this->db->where('status', 'pending');
-	    $query = $this->db->get();
-
-	    $ids = array(); // Initialize an empty array to store IDs
-
-	    if ($query->num_rows() > 0) {
-	        // Loop through the result and extract IDs
-	        foreach ($query->result() as $row) {
-	            $ids[] = $row->job_id; // Add the ID to the array
-	        }
-	    }
-
-	    return $ids; // Return the array of IDs
-	}
-	public function getQueueJobdsInex() {
-	    $this->db->select('job_id');
-	    $this->db->from('tasks_queue');
-	    $this->db->where('status', 'pending');
-	    $this->db->where('execution_started_on', NULL);
-	    $query = $this->db->get();
-
-	    $ids = array(); // Initialize an empty array to store IDs
-
-	    if ($query->num_rows() > 0) {
-	        // Loop through the result and extract IDs
-	        foreach ($query->result() as $row) {
-	            $ids[] = $row->job_id; // Add the ID to the array
-	        }
-	    }
-
-	    return $ids; // Return the array of IDs
-	}
 public function get_jobrecords($id) {
 	//echo $id;
 
@@ -501,7 +292,6 @@ public function getPendingqJobCount() {
 $this->db->from('tasks_queue');
 $this->db->join('job_results', 'job_results.job_id = tasks_queue.job_id', 'left');
 $this->db->where('tasks_queue.status', 'pending');
-$this->db->where('tasks_queue.execution_started_on',NULL);
 $this->db->where('job_results.job_id IS NULL', null, false);
 //print_r($this->db->last_query());
 $query = $this->db->get();
@@ -830,18 +620,6 @@ public function checkjobresultsexitsA($jtype,$jid){
         return false;
     	}
 	}
-	public function checkJobinQueue($jobid) {
-		$jobde = $this->projects_model->getJobdetails($jobid);
-		$existingRecord = '';
-		if($jobde){
-			$existingRecord = $this->db->get_where('tasks_queue', array('job_id' => $jobde[0]->id,'status'=>'pending','execution_started_on'=>NULL))->row();
-		}
-	   	if($existingRecord!=''){
-	   		return true;
-	   	} else{
-	   		return false;
-	   	}
-	}
 
 	public function getOldestJobId() {
 
@@ -852,10 +630,8 @@ public function checkjobresultsexitsA($jtype,$jid){
 
 		$pendingCount = $result->pending_count;
 		
-		$queryJobsMaster = $this->db->query("SELECT COUNT(*) AS num_records FROM jobs_master WHERE cosmo_status = 'Processing'");
-		$pendingDMFileJobCount = $queryJobsMaster->row()->num_records;
 
-		if($pendingCount==0 && $pendingDMFileJobCount==0) {
+		if($pendingCount==0) {
 
 				$this->db->select('job_id');
 				$this->db->where('status', 'pending');
@@ -950,7 +726,6 @@ public function getPendingpatches($id)
 		}
 
 		$data = array();
-		$addSolubility = array();
 	
 		foreach ($results_10 as $row)  {  // Call function to get values
   
@@ -978,41 +753,13 @@ public function getPendingpatches($id)
 			 'wt_fraction' => $pureDataField
 
    		 );
-
-
-   	 	/*----------Solubility prediction data for 10-------------*/
-
-		$existing_data = $this->db->get_where('solubility_correction_data', array(
-		    'job_id' => $job_id,
-		    's_name' => $ssystem_name,
-		    'temp' => '10' // Assuming 'temp' is another column you want to match
-		))->row_array();
-		if (!empty($existing_data)) {
-		    $known_solubility = $existing_data['s_value'];
-		} else {
-		    $known_solubility = 0;
-		}
-		$addSolubility[] = array(
-      	 	 'result_job_id' =>  (int)$result_job_id,
-       		 'job_id' => (int)$job_id,
-       		 'ssystem_name' => $ssystem_name,
-			 'known_solubility' => $known_solubility,
-			 'predicted_solubility' => $tencmgml,
-			 'temp' => '10',
-			 'created_at' => date('Y-m-d H:i:s'),
-			 
-
-   		 );
-		
-		}
-	}	
+	}
+}	
 		// Insert the data using batch insert
 
 		$this->db->insert_batch('results_data_10', $data);
 
-		/*----------Solubility prediction data for 10-------------*/
-		$this->db->insert_batch('solubility_corrected_predicted_data', $addSolubility);
-
+		
 		$exists	=    $this->projects_model->job_exists($jbd[0]->id);
 		
 
@@ -1079,7 +826,6 @@ public function getPendingpatches($id)
 		}
 
 		$data = array();
-		$addSolubility = array();
 	
 		foreach ($results_10 as $row)  {  // Call function to get values
   
@@ -1108,38 +854,11 @@ public function getPendingpatches($id)
 
 
    		 );
-
-
-   	 	/*----------Solubility prediction data for 10-------------*/
-
-		$existing_data = $this->db->get_where('solubility_correction_data', array(
-		    'job_id' => $job_id,
-		    's_name' => $ssystem_name,
-		    'temp' => '25' // Assuming 'temp' is another column you want to match
-		))->row_array();
-		if (!empty($existing_data)) {
-		    $known_solubility = $existing_data['s_value'];
-		} else {
-		    $known_solubility = 0;
-		}
-		$addSolubility[] = array(
-      	 	 'result_job_id' =>  (int)$result_job_id,
-       		 'job_id' => (int)$job_id,
-       		 'ssystem_name' => $ssystem_name,
-			 'known_solubility' => $known_solubility,
-			 'predicted_solubility' => $tencmgml,
-			 'temp' => '25',
-			 'created_at' => date('Y-m-d H:i:s'),
-			 
-
-   		 );
 	}
 }	
 		// Insert the data using batch insert
 
 		$this->db->insert_batch('results_data_25', $data);
-
-		$this->db->insert_batch('solubility_corrected_predicted_data', $addSolubility);
 
 		$jbd = $this->projects_model->getJobdetails($id);
 		$exists	=    $this->projects_model->job_exists($jbd[0]->id);
@@ -1205,7 +924,6 @@ public function getPendingpatches($id)
 		}
 
 		$data = array();
-		$addSolubility = array();
 	
 		foreach ($results_10 as $row)  {  // Call function to get values
 			
@@ -1221,32 +939,6 @@ public function getPendingpatches($id)
 		$tencvl = $this->projects_model->get10cvlinsert($row->pdata,$row->w1_density,$row->job_id);
 		$tencyl = $this->projects_model->get10cYNinsert($row->pdata,$row->job_id,$row->job_id,$row->solvents);
 
-
-		/*---get 10 results data /This code return by sonam for swapping 50 ->10 data--*/
-  		$results_data_10 = $this->db->select('*');
-		$this->db->from('results_data_10');
-		$this->db->where('job_id ', $job_id);
-		$this->db->where('ssystem_name', $row->solvents);
-		$query = $this->db->get();    
-		$valdata = $query->row();
-
-		
-		$mg_ml_ten_val = $valdata->{'10cmgml'};
-		$yield_ten_val = $valdata->{'10cyl'};
-		/*---compare 10 ,50 mg/ml value results data--*/
-		
-
-		if($mg_ml_ten_val > $tencmgml)  {
-			
-			$fmgml = $mg_ml_ten_val;	
-			$fmgyield = $yield_ten_val;
-			$this->db->update('results_data_10', array('10cmgml' => $tencmgml,'10cyl'=> $tencyl), array('id' => $valdata->id));
-		} else{
-			$fmgml = $tencmgml;
-			$fmgyield = $tencyl;
-		}
-			
-
     // Add data to the array
    	 	$data[] = array(
       	 	 'result_job_id' =>  (int)$result_job_id,
@@ -1254,37 +946,11 @@ public function getPendingpatches($id)
        		 'ssystem_name' => $ssystem_name,
 			 'at50' => $at10,
 			 'lat50' => $lat10,
-			 '50cmgml' => $fmgml,
+			 '50cmgml' => $tencmgml,
 			 '50cvl' => $tencvl,
-			 '50cyl' => $fmgyield,
+			 '50cyl' => $tencyl,
 			 'wt_fraction' => $pureDataField
 
-
-   		 );
-
-
-
-   	 	/*----------Solubility prediction data for 10-------------*/
-
-		$existing_data = $this->db->get_where('solubility_correction_data', array(
-		    'job_id' => $job_id,
-		    's_name' => $ssystem_name,
-		    'temp' => '50' // Assuming 'temp' is another column you want to match
-		))->row_array();
-		if (!empty($existing_data)) {
-		    $known_solubility = $existing_data['s_value'];
-		} else {
-		    $known_solubility = 0;
-		}
-		$addSolubility[] = array(
-      	 	 'result_job_id' =>  (int)$result_job_id,
-       		 'job_id' => (int)$job_id,
-       		 'ssystem_name' => $ssystem_name,
-			 'known_solubility' => $known_solubility,
-			 'predicted_solubility' => $fmgml,
-			 'temp' => '50',
-			 'created_at' => date('Y-m-d H:i:s'),
-			 
 
    		 );
 	}
@@ -1292,8 +958,6 @@ public function getPendingpatches($id)
 		// Insert the data using batch insert
 
 		$this->db->insert_batch('results_data_50', $data);
-		
-		$this->db->insert_batch('solubility_corrected_predicted_data', $addSolubility);
 
 		$jbd = $this->projects_model->getJobdetails($id);
 		$exists	=    $this->projects_model->job_exists($jbd[0]->id);
@@ -1319,11 +983,7 @@ public function getPendingpatches($id)
 
 			$this->db->insert('job_status', $datae);
 		}
-
-
-		
 	}
-		$this->db->update('projects', array('optimised' => 'Yes'), array('id' => $id));
 		echo "50 Done ";
 		
 	}
@@ -1355,33 +1015,7 @@ return false; // No rows found
 
 	}
 		
-}
-
-
-/*-------------check job inseted in all 10,25,50 results table*/
-public function checkjobinsertornot($id) {
-	$jbd = $this->projects_model->getJobdetails1($id);
-		if($jbd) {	
-			$query = $this->db->select('status')
-			->from('job_results_count')
-			->where('job_results_count.job_id', $jbd[0]->id)
-			->get();
-			//echo $this->db->last_query(); 
-		if ($query->num_rows() > 0) {
-			$rows = $query->result();
-			foreach ($rows as $row) {
-				if ($row->status != 'Completed') {
-					return false; // Status is not completed for at least one row
-				}
 			}
-			return true; // Status is completed for all rows
-		}
-		return false; // No rows found
-
-
-	}
-		
-}
 
 
 			public function checkjobinsertsA($id) {
@@ -1992,18 +1626,6 @@ public function get10mgdata($jid,$w1,$temp){
 		$this->db->from('jobs_master');
 		//$this->db->join('tbl_lining', 'products.lining=tbl_lining.id', 'left');
 		$this->db->where('id', $id);  // Also mention table name here
-		$query = $this->db->get();    
-		//echo $this->db->last_query();
-		if($query->num_rows() > 0)
-		return $query->result();
-
-	}
-	public function solubiltyDataforCorrection($id) {
-
-		$this->db->select('*');
-		$this->db->from('solubility_correction_data');
-		//$this->db->join('tbl_lining', 'products.lining=tbl_lining.id', 'left');
-		$this->db->where('job_id', $id);  // Also mention table name here
 		$query = $this->db->get();    
 		//echo $this->db->last_query();
 		if($query->num_rows() > 0)

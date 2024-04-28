@@ -243,6 +243,8 @@ document.addEventListener("DOMContentLoaded", function () {
         $('#fetchedData').html('<table id="dataTable" class="table table-bordered table-hover table-striped dataTable no-footer dtr-inline" style="font-size:8px;width: 100%;"></table>');
 
         var projectsData = response.data;
+
+        
         
         var tableData = [];
 
@@ -266,6 +268,8 @@ document.addEventListener("DOMContentLoaded", function () {
         for (var i = 0; i < projectsData.length; i++) {
             maxResults = Math.max(maxResults, projectsData[i].results_10.length);
         }
+
+        var dataPushed = false;
 
       // Populate the data rows
 for (var i = 0; i < maxResults; i++) {
@@ -292,10 +296,38 @@ for (var i = 0; i < maxResults; i++) {
 
         if (parseFloat(results_10) > parseFloat(results_50)) { // Compare as floats
         tableData.push(dataRow);
+        dataPushed = true; // Set flag to true
         }
+        //dataPushed = false;
+
     }
+
+  
+
    
 }
+
+    
+    if (!dataPushed) {
+       console.log("No");
+       var id = getParameterByName('id');
+
+       $.ajax({
+    type: "GET",
+    url: "<?php echo site_url('analysis/updatecorrect'); ?>",
+    data: { id: id }, // Pass the id parameter to the server
+    dataType: "json",
+    success: function(response) {
+        // Upon successful AJAX request, redirect to another page
+        window.location.href = "projects";
+    },
+    error: function(xhr, status, error) {
+        // Handle error if needed
+        console.error(xhr, status, error);
+    }
+});
+
+    }
 
 table = $('#dataTable').DataTable({
         data: tableData,
@@ -375,6 +407,19 @@ $.ajax({
         $('#fetchDataButton').prop('disabled', false); // Enable the "Fetch Data" button on error
     },
 });
+
+
+
+// Function to get the value of a query string parameter by name
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
 
 
 

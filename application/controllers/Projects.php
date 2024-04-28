@@ -1,11 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-
 class Projects extends MY_Controller {
 
 	public function __construct()
@@ -25,121 +20,8 @@ class Projects extends MY_Controller {
 	{
 		ifPermissions('projects_list');
 		
-		// Assuming $results contains the data fetched from your SQL query
-		$type = $this->input->get('type');
-		$this->page_data['projects'] = [];
-		if($type =='progress'){
-			$query = $this->db->select('job_id')
-                  ->from('job_results_count')
-                  ->where('status','Pending')
-                  ->get();
-            $job_ids = array();
-			if ($query->num_rows() > 0) {
-			    // Fetch the result rows as an array of objects
-			    $result = $query->result();
-
-			    // Extract project IDs from the result array
-			   
-			    foreach ($result as $row) {
-			        $job_ids[] = $row->job_id;
-			    }
-
-			    // Now $project_ids contains the project IDs associated with the job IDs in $ids_string
-			   
-			} 
-			$project_ids = array();
-			if(!empty($job_ids)){
-				$job_string = implode(',',$job_ids);
-				$query1 = $this->db->select('project_id')
-	                  ->from('jobs_master')
-	                  ->where("id IN ($job_string)")
-	                  ->get();
-	           
-				if ($query1->num_rows() > 0) {
-				    // Fetch the result rows as an array of objects
-				    $result1 = $query1->result();
-
-				    // Extract project IDs from the result array
-				   
-				    foreach ($result1 as $row) {
-				        $project_ids[] = $row->project_id;
-				    }
-
-				    // Now $project_ids contains the project IDs associated with the job IDs in $ids_string
-				   
-				} 
-
-			}
-			if(!empty($project_ids)){
-				$this->page_data['projects'] =  $this->projects_model->get_projects_by_ids($project_ids);
-			}
-			$this->load->view('projects/list', $this->page_data);
-
-		}
-		elseif($type =='dmfile'){
-		
-			$query11 = $this->db->select('project_id')
-              ->from('jobs_master')
-              ->where('cosmo_status','Processing')
-              ->get();
-           	$project_idsp = array();
-			if ($query11->num_rows() > 0) {
-			    // Fetch the result rows as an array of objects
-			    $result11 = $query11->result();
-
-			    // Extract project IDs from the result array
-			   
-			    foreach ($result11 as $row) {
-			        $project_idsp[] = $row->project_id;
-			    }
-
-			    // Now $project_ids contains the project IDs associated with the job IDs in $ids_string
-			   
-			} 
-			if(!empty($project_idsp)){
-				$this->page_data['projects'] =  $this->projects_model->get_projects_by_ids($project_idsp);
-
-			}
-		    $this->load->view('projects/list', $this->page_data);
-		}
-		elseif($type =='queue'){
-			$job_in_queue_ids = $this->projects_model->getQueueJobdsInex();
-			
-			if(!empty($job_in_queue_ids)){
-				
-				$queryp = $this->db->select('project_id')
-	                  ->from('jobs_master')
-	                  ->where_in('id', $job_in_queue_ids)
-	                  ->get();
-	            $project_idss = array();
-	         
-				if ($queryp->num_rows() > 0) {
-				    // Fetch the result rows as an array of objects
-				    $resultp = $queryp->result();
-				   
-				    // Extract project IDs from the result array
-				   
-				    foreach ($resultp as $row) {
-				        $project_idss[] = $row->project_id;
-				    }
-
-				    // Now $project_ids contains the project IDs associated with the job IDs in $ids_string
-				   
-				} 
-				
-				if(!empty($project_idss)){
-
-					$this->page_data['projects'] =  $this->projects_model->get_projects_by_ids($project_idss);
-
-				}
-			}
-			$this->load->view('projects/list', $this->page_data);
-		} else{
-			$this->page_data['projects'] = $this->projects_model->get();
-			$this->load->view('projects/list', $this->page_data);
-
-		}
-
+		$this->page_data['projects'] = $this->projects_model->get();
+		$this->load->view('projects/list', $this->page_data);
 	}
 
 	public function add()
@@ -153,7 +35,6 @@ class Projects extends MY_Controller {
 		ifPermissions('project_submit');
 
 		$this->page_data['Project'] = $this->projects_model->getById($id);
-		$this->page_data['cdata'] = $this->projects_model->getsolvents_all();
 		
 		$this->load->view('projects/submit', $this->page_data);
 	}
@@ -199,26 +80,11 @@ class Projects extends MY_Controller {
 public function customcalulation()
 {
 	session_write_close();
-	
 
 	$ids = $this->input->post('ids');
 	$jtype = $this->input->post('jtype');
 	$jid=$this->input->post('jobid'); 
-	if($ids == NULL){
-		echo "not done";
-		die;
-	}
-	
 
-	$pending_projects = $this->projects_model->getPendingProjects();
-
-	$queryJobsMaster = $this->db->query("SELECT COUNT(*) AS num_records FROM jobs_master WHERE cosmo_status = 'Processing'");
-    $numRecordsJobsMaster = $queryJobsMaster->row()->num_records;
-
-	if($pending_projects || $numRecordsJobsMaster > 0) {
-		echo "Pending"; //change to Pending to work
-		die;
-	}
 
 	if($jtype=="Pure_68") {
 
@@ -364,7 +230,7 @@ public function customcalulation()
 
 			$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 			
-			$ssh = new Net_SSH2('128.199.31.121',22);
+			$ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -521,7 +387,7 @@ while (empty($stream)) {
 		$binary_py = $this->projects_model->getPython();
 		$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 		
-		$ssh = new Net_SSH2('128.199.31.121',22);
+		$ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -697,7 +563,7 @@ public function tertiary_16400_custom($ids,$stype,$id,$temp) {
 			//echo $jobdetails[0]->project_id;
 			$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 
-			$ssh = new Net_SSH2('128.199.31.121',22);
+			$ssh = new Net_SSH2('139.59.95.53',22);
 			if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 				exit('Login Failed');
 			}
@@ -874,7 +740,7 @@ $item = $row['solvent1_name'];
 
 			$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 			
-			$ssh = new Net_SSH2('128.199.31.121',22);
+			$ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -1096,20 +962,9 @@ while (empty($stream)) {
 
 		$this->db->where('job_id', $id);
 		$this->db->delete('job_status');
-
-		$this->db->where('job_id', $id);
-		$this->db->delete('tasks_queue');
-		$existingRecord = $this->db->get_where('tasks_queue', array('job_id' => $id,'status'=>'pending'))->row();
-	    //print_r($existingRecord);
-	    if ($existingRecord) {
-	    	$updatelastdata = array('execution_started_on' => NULL);
-            $this->db->where('job_id', $id);
-            $this->db->update('tasks_queue', $updatelastdata);
-	    }
 		
 		$this->session->set_flashdata('alert-type', 'success');
 		$this->session->set_flashdata('alert', 'Job Data Removed Successfully');
-
 
 		redirect('projects');
 
@@ -1127,7 +982,6 @@ if (!$existingRecord) {
     $data = array(
         'job_id' => $jobid,
         'job_type' => $stype,
-        'is_custom' => 0,
         'added_to_queue' => 'Yes',
         'started_on' => date('Y-m-d H:i:s'),
         'status' => 'pending'
@@ -1138,34 +992,6 @@ if (!$existingRecord) {
 	echo "Queue Added";
 }
 	
-
-	}
-
-	public function addcustomjobqueue(){
-
-		$ids = $this->input->post('ids');
-		$ids_string = implode(',',$ids);
-		$jtype = $this->input->post('jtype');
-		$jid=$this->input->post('jobid');
-
-		$existingRecord = $this->db->get_where('tasks_queue', array('job_id' => $jid,'status'=>'pending'))->row();
-
-		if (!$existingRecord) {
-		    $data = array(
-		        'job_id' => $jid,
-		        'job_type' => $jtype,
-		        'is_custom' => '1',
-		        'selected_solvents_ids' => $ids_string,
-		        'added_to_queue' => 'Yes',
-		        'started_on' => date('Y-m-d H:i:s'),
-		        'status' => 'pending'
-		    );
-
-		    $this->db->insert('tasks_queue', $data);
-			//print_r($this->db->last_query());
-			echo "Queue Added";
-		}
-			
 
 	}
 
@@ -1231,7 +1057,7 @@ if (!$existingRecord) {
 	
 	public function del()
 	{
-	    $ssh = new Net_SSH2('128.199.31.121',22);
+	    $ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -1262,7 +1088,7 @@ if (!$existingRecord) {
 
 	public function killall()
 	{
-	    $ssh = new Net_SSH2('128.199.31.121',22);
+	    $ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -1276,63 +1102,9 @@ if (!$existingRecord) {
 		
 		$this->db->query("DELETE FROM jobs_master WHERE cosmo_status = 'Processing'");
 		$this->db->query("DELETE FROM job_results_count WHERE status = 'Pending'");
-		//$this->db->query("DELETE FROM  tasks_queue WHERE status = 'pending' and  execution_started_on != NULL");
 		
 	    redirect('projects');
 		
-	       
-	}
-	public function killqueueall()
-	{
-	    $ssh = new Net_SSH2('128.199.31.121',22);
-		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
-			exit('Login Failed');
-		}
-		$kill_command1 = 'sh /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/python_kill.sh ConformerGenerator.py';
-		$stream1 = $ssh->exec($kill_command1);
-		
-		$kill_command = 'sh /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/python3_kill.sh python3.py';
-		$stream = $ssh->exec($kill_command);
-			
-		sleep(50);
-		
-		$job_in_queue_ids = $this->projects_model->getQueueJobds();
-
-
-		if (!empty($job_in_queue_ids)) {
-
-		    // Convert array of IDs into comma-separated string
-		    $ids_string = implode(',', $job_in_queue_ids);
-
-		    // Delete rows from 'tasks_queue' table where 'id' is in the list of IDs
-		    $this->db->query("DELETE FROM tasks_queue WHERE job_id IN ($ids_string)");
-		    $this->db->query("DELETE FROM jobs_master WHERE id IN ($ids_string) AND cosmo_status IN ('Processing', 'Pending')");
-
-		    $this->db->where_in('job_id', $job_in_queue_ids);
-			$this->db->delete('job_results_count');
-
-			$this->db->where_in('job_id', $job_in_queue_ids);
-			$this->db->delete('job_results');
-
-			$this->db->where_in('job_id', $job_in_queue_ids);
-			$this->db->delete('results_data_10');
-
-			$this->db->where_in('job_id', $job_in_queue_ids);
-			$this->db->delete('results_data_25');
-
-			$this->db->where_in('job_id', $job_in_queue_ids);
-			$this->db->delete('results_data_50');
-
-			$this->db->where_in('job_id', $job_in_queue_ids);
-			$this->db->delete('job_status');
-		
-			$this->session->set_flashdata('alert-type', 'success');
-			$this->session->set_flashdata('alert', 'Job Data Removed Successfully');
-
-		    
-		}
-
-	    redirect('projects');
 	       
 	}
 
@@ -1369,14 +1141,14 @@ if (!$existingRecord) {
 	public function actrun()
 	{
 
-		$connection = @ssh2_connect('128.199.31.121', 22);
+		$connection = @ssh2_connect('139.59.95.53', 22);
 		//include(APPPATH . 'third_party/phpseclib1.0.20/Net/SSH2.php');
 		set_include_path(get_include_path() . PATH_SEPARATOR . APPPATH.'third_party/phpseclib1.0.20');
 		include('Net/SSH2.php');
 		include('Net/SFTP.php');
 		define('NET_SSH2_LOGGING', NET_SSH2_LOG_COMPLEX);
 		
-		$ssh = new Net_SSH2('128.199.31.121',22);
+		$ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -1387,7 +1159,7 @@ if (!$existingRecord) {
 $directory = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy';
 $file = 'existing_file.py';
 
-$sftp = new Net_SFTP('128.199.31.121',22);
+$sftp = new Net_SFTP('139.59.95.53',22);
 if (!$sftp->login('chemistry1', 'Ravi@1234')) {
     exit('Login Failed');
 }
@@ -1464,546 +1236,7 @@ $sftp->disconnect();
 	{
 		//print_r($_POST);
 			
-		$ssh = new Net_SSH2('128.199.31.121',22);
-		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
-			exit('Login Failed');
-		}
-
-		$fname=$this->input->post('mname');
-		$mvalue=$this->input->post('mvalue');
-		$Smile=$this->input->post('Smile');
-		$kns=$this->input->post('kns');
-		$hfvalue=$this->input->post('hfvalue');
-		$molweight= $this->input->post('mweight');
-		$s_name = $this->input->post('s_name');
-		$s_value = $this->input->post('s_value');
-		$temp = $this->input->post('temp');
-
-		$ext='.inp';
-		$fullname=$fname.$ext;
-		$project_code=$this->input->post('project_code');
-		$structure=$this->input->post('structure');
-
-		
-       
-		$sftp = new Net_SFTP('128.199.31.121',22);
-		if (!$sftp->login('chemistry1', 'Ravi@1234')) {
-    	exit('Login Failed');
-		}
-
-		$directory_path = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/'.$fname; // the path of the directory you want to check
-		
-		
-		if ($sftp->file_exists($directory_path)) { // check if the directory exists
-    	//echo "The directory $directory_path exists.";
-		$this->session->set_flashdata('alert-type', 'danger');
-		$this->session->set_flashdata('alert', 'Give Molecule Name (directory already exists on server)');
-		
-		redirect('projects/submit/'.$project_code);
-		}
-
-		/*-- if one job already is in process then this added in to queue*/
-
-		$queryJobsMaster = $this->db->query("SELECT COUNT(*) AS num_records FROM jobs_master WHERE cosmo_status = 'Processing'");
-        $numRecordsJobsMaster = $queryJobsMaster->row()->num_records;
-
-        // Query for tasks_queue table
-        $queryTasksQueue = $this->db->query("SELECT COUNT(*) AS num_records FROM job_results_count WHERE status = 'Pending'");
-        $numRecordsTasksQueue = $queryTasksQueue->row()->num_records;
-
-      	if($numRecordsJobsMaster > 0 || $numRecordsTasksQueue > 0){
-      		$id = $this->projects_model->createjob([
-				'project_id' => $project_code,
-				'structure_code' => $structure,
-				'inp_filename' => $fullname,
-				'inp_value	' => (int) $mvalue,
-				'smiles	' => $Smile,
-				'know_solubility	' => $kns,
-				'hfuss_value	' => $hfvalue,
-				'mol_weight	' => $molweight,
-				'process_start	' => date('m/d/Y h:i:s a', time()),
-				'process_end	' => '',
-				'cosmo_status	' => 'Pending',
-			]);
-
-			$this->activity_model->add('DEM File '.$fullname.' Created by User:'.logged('name'), logged('id'));
-
-			$query = $this->db->query("SELECT id FROM jobs_master ORDER BY id DESC LIMIT 1");
-			$row = $query->row();
-			$jobbid = $row->id;
-
-			if(is_array(@$s_name) && count(@$s_name) >0 ){
-	            for ($i = 0;$i <= count($s_name);$i++) {
-	                if (!empty($s_name[$i])) {
-	                	$dataAdd = array(
-				        'job_id' => $jobbid,
-				        's_name' => $s_name[$i],
-				        's_value' => $s_value[$i],
-				        'temp' =>	$temp[$i],
-				        'created_at' => date('Y-m-d H:i:s'),
-				        'status' => 'Pending'
-				    );
-
-				    $this->db->insert('solubility_correction_data', $dataAdd);
-
-	                }
-	            }
-	        }
-
-			$existingRecord = $this->db->get_where('tasks_queue', array('job_id' => $jobbid,'status'=>'pending'))->row();
-			
-			
-			if (!$existingRecord) {
-			    $data = array(
-			        'job_id' => $jobbid,
-			        'added_to_queue' => 'Yes',
-			        'is_custom' => '0',
-			        'started_on' => date('Y-m-d H:i:s'),
-			        'status' => 'pending'
-			    );
-
-			    $this->db->insert('tasks_queue', $data);
-				//print_r($this->db->last_query());
-				$this->session->set_flashdata('alert-type', 'success');
-				$this->session->set_flashdata('alert', 'Job Added in Queue Succesfully...');
-
-				redirect('projects');
-				
-			}
-
-
-     	}
-        /*------------------------end-------------------------------*/
-		
-		//$ssh->enablePTY();
-		//$ssh->exec('nohup ./sr1 80 4 400 400 20 &');
-		
-		chmod("/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/$fullname", 0777);
-
-		$contentf = $fname."\t".$Smile."\t".$mvalue;
-		$ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; touch '.$fullname.'; echo "'.$contentf.'" >> '.$fullname.'');
-		$ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; nohup python3 ConformerGenerator.py --structures_file '.$fullname.' --n_cores=16 > t.log 2>&1 & echo $!');
-
-		$id = $this->projects_model->createjob([
-			'project_id' => $project_code,
-			'structure_code' => $structure,
-			'inp_filename' => $fullname,
-			'inp_value	' => (int) $mvalue,
-			'smiles	' => $Smile,
-			'know_solubility	' => $kns,
-			'hfuss_value	' => $hfvalue,
-			'mol_weight	' => $molweight,
-			'process_start	' => date('m/d/Y h:i:s a', time()),
-			'process_end	' => '',
-			'cosmo_status	' => 'Processing',
-		]);
-
-		$queryn = $this->db->query("SELECT id FROM jobs_master ORDER BY id DESC LIMIT 1");
-		$row_id = $queryn->row();
-		$jobbid = $row_id->id;
-
-		if(is_array(@$s_name) && count(@$s_name) >0 ){
-            for ($i = 0;$i <= count($s_name);$i++) {
-                if (!empty($s_name[$i])) {
-                	$dataAdd = array(
-			        'job_id' => $jobbid,
-			        's_name' => $s_name[$i],
-			        's_value' => $s_value[$i],
-			        'created_at' => date('Y-m-d H:i:s'),
-			        'status' => 'Pending'
-			    );
-
-			    $this->db->insert('solubility_correction_data', $dataAdd);
-
-                }
-            }
-        }
-
-		$this->activity_model->add('DEM File '.$fullname.' Created by User:'.logged('name'), logged('id'));
-
-
-		$this->session->set_flashdata('alert-type', 'success');
-		$this->session->set_flashdata('alert', 'Job Created Succesfully...');
-
-		redirect('projects');
-
-	}
-
-	public function savesolubilitydata(){
-		$jobid= $this->input->post('jobid');
-		$s_name = $this->input->post('s_name');
-		$s_value = $this->input->post('s_value');
-		$temp = $this->input->post('temp');
-		$type = $this->input->post('type');
-
-		if($type=='1') {
-			if(is_array(@$s_name) && count(@$s_name) >0 ){
-				/* Delete old---------------------*/
-	            $this->db->where_in('job_id', $jobid);
-				$this->db->delete('solubility_correction_data');
-	            for ($i = 0;$i <= count($s_name);$i++) {
-
-	                if (!empty($s_name[$i])) {
-	                	$dataAdd = array(
-				        'job_id' => $jobid,
-				        's_name' => $s_name[$i],
-				        's_value' => $s_value[$i],
-				        'temp' => $temp[$i],
-				        'created_at' => date('Y-m-d H:i:s'),
-				        'status' => 'Pending'
-				    );
-
-			    	$this->db->insert('solubility_correction_data', $dataAdd);
-
-                	}
-            	}
-	        }
-	        $this->session->set_flashdata('alert-type', 'success');
-			$this->session->set_flashdata('alert', 'Solubility Created Succesfully...');
-
-			redirect('projects');
-	    }
-	    if($type=='2') {
-	    	
-	     	$fileName = $_FILES['file']['name'];
-		    $uploadData = array();
-			if (!empty($fileName)) {
-				$config['upload_path'] = './uploads/';
-				$config['allowed_types'] = 'xls|xlsx';
-				$config['max_size'] = 2048;
-				$config['remove_spaces'] = TRUE;
-				$config['encrypt_name'] = TRUE;
-				$this->load->library('upload', $config);
-				$this->upload->initialize($config);
-
-				if (!$this->upload->do_upload('file')) {
-				    json_error("File Upload Error", $this->upload->display_errors(), 400);
-				} else {
-				    $uploadData = $this->upload->data();
-				    $fileName = $uploadData['file_name'];
-				    $filePath = FCPATH . 'uploads/' . $fileName; // Use FCPATH to get the physical path
-				     
-				    $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
-				    // Get the first worksheet
-				    $worksheet = $spreadsheet->getActiveSheet();
-				    // Get the highest row and column numbers to determine the data range
-				    $highestRow = $worksheet->getHighestRow();
-				    $highestColumn = $worksheet->getHighestColumn();
-				    $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
-
-				    // Initialize an array to store the Excel data
-				    $data = array();
-
-				    // Iterate through each row and column to extract data
-				    for ($row = 1; $row <= $highestRow; ++$row) {
-				        $rowData = array();
-				        for ($col = 1; $col <= $highestColumnIndex; ++$col) {
-				            // Get the cell value
-				            $cellValue = $worksheet->getCellByColumnAndRow($col, $row)->getValue();
-				            // Add the cell value to the row data array
-				            $rowData[] = $cellValue;
-				        }
-				       
-				        $data[] = $rowData;
-				    }
-				    
-			        $header = array_shift($data);
-			 
-			        foreach ($data as $row) {
-			            $row_data = array_combine($header, $row);
-			          
-			           // Check if 's_name' already exists in the database
-					    $existing_data = $this->db->get_where('solubility_correction_data', array('job_id' => $jobid,'s_name' => $row_data['s_name'],'temp' => $row_data['temp']))->row_array();
-
-					    if (!empty($existing_data)) {
-					        // 's_name' already exists, update the record
-					        $this->db->where('job_id', $jobid);
-					        $this->db->where('s_name', $row_data['s_name']);
-					        $this->db->where('temp', $row_data['temp']);
-					        $this->db->update('solubility_correction_data', $row_data);
-					    } else {
-					        
-					        $row_data['job_id'] = $jobid;
-					        $row_data['created_at'] = date('Y-m-d H:i:s'); 
-					        $row_data['status'] = 'Pending'; 
-
-					        $this->db->insert('solubility_correction_data', $row_data);
-					    }
-			        }
-			        
-					$this->session->set_flashdata('alert-type', 'success');
-					$this->session->set_flashdata('alert', 'Uploaded Successfully...');
-					redirect('projects');
-
-				}
-
-		       
-
-	    	} else{
-	    		$this->session->set_flashdata('alert-type', 'error');
-				$this->session->set_flashdata('alert', 'No file uploaded.');
-				redirect('projects');
-	    	}
-	    }
-	    if($type=='3') {
-	    	
-	     	$fileName = $_FILES['file']['name'];
-
-		    $uploadData = array();
-			if (!empty($fileName)) {
-				$config['upload_path'] = './uploads/';
-				$config['allowed_types'] = 'xls|xlsx';
-				$config['max_size'] = 2048;
-				$config['remove_spaces'] = TRUE;
-				$config['encrypt_name'] = TRUE;
-				$this->load->library('upload', $config);
-				$this->upload->initialize($config);
-
-				if (!$this->upload->do_upload('file')) {
-				    json_error("File Upload Error", $this->upload->display_errors(), 400);
-				} else {
-				    $uploadData = $this->upload->data();
-				    $fileName = $uploadData['file_name'];
-				    $filePath = FCPATH . 'uploads/' . $fileName; // Use FCPATH to get the physical path
-				     
-				    $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
-				    // Get the first worksheet
-				    $worksheet = $spreadsheet->getActiveSheet();
-				    // Get the highest row and column numbers to determine the data range
-				    $highestRow = $worksheet->getHighestRow();
-				    $highestColumn = $worksheet->getHighestColumn();
-				    $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
-
-				    // Initialize an array to store the Excel data
-				    $data = array();
-
-				    // Iterate through each row and column to extract data
-				    for ($row = 1; $row <= $highestRow; ++$row) {
-				        $rowData = array();
-				        for ($col = 1; $col <= $highestColumnIndex; ++$col) {
-				            // Get the cell value
-				            $cellValue = $worksheet->getCellByColumnAndRow($col, $row)->getValue();
-				            // Add the cell value to the row data array
-				            $rowData[] = $cellValue;
-				        }
-				       
-				        $data[] = $rowData;
-				    }
-				    
-			        $header = array_shift($data);
-			 
-			        foreach ($data as $row) {
-			            $row_data = array_combine($header, $row);
-			          
-			           // Check if 's_name' already exists in the database
-					    $existing_data = $this->db->get_where('solubility_correction_data', array('job_id' => $jobid,'s_name' => $row_data['s_name'],'temp' => $row_data['temp']))->row_array();
-
-					    if (!empty($existing_data)) {
-					        // 's_name' already exists, update the record
-					        $this->db->where('job_id', $jobid);
-					        $this->db->where('s_name', $row_data['s_name']);
-					        $this->db->where('temp', $row_data['temp']);
-					        $this->db->update('solubility_correction_data', $row_data);
-					    } else {
-					        
-					        $row_data['job_id'] = $jobid;
-					        $row_data['created_at'] = date('Y-m-d H:i:s'); 
-					        $row_data['status'] = 'Pending'; 
-
-					        $this->db->insert('solubility_correction_data', $row_data);
-					    }
-
-					    /*--------update daat in predicted table----------*/
-					    $check_existing_data = $this->db->get_where('solubility_corrected_predicted_data', array('job_id' => $jobid,'ssystem_name' => $row_data['s_name'],'temp' => $row_data['temp']))->row_array();
-					   
-					    if (!empty($check_existing_data)) {
-					        // 's_name' already exists, update the record
-					        $this->db->where('job_id', $jobid);
-					        $this->db->where('ssystem_name', $row_data['s_name']);
-					        $this->db->where('temp', $row_data['temp']);
-					        $this->db->update('solubility_corrected_predicted_data',['known_solubility'=> $row_data['s_value']]);
-					    } 
-			        }
-			        
-					$this->session->set_flashdata('alert-type', 'success');
-					$this->session->set_flashdata('alert', 'Uploaded Successfully...');
-					redirect('projects');
-
-				}
-
-		       
-
-	    	} else{
-	    		$this->session->set_flashdata('alert-type', 'error');
-				$this->session->set_flashdata('alert', 'No file uploaded.');
-				redirect('projects');
-	    	}
-	    }
-
-	}
-
-	public function getpredictedSol(){
-		$job_id = $this->input->post('job_id');
-       
-		$this->db->select('id, job_id, ssystem_name, known_solubility, predicted_solubility, corrected_solubility, temp, created_at');
-		$this->db->from('solubility_corrected_predicted_data');
-		$this->db->where('job_id', $job_id);
-		$this->db->order_by('ssystem_name', 'ASC'); // Order by system name ascending
-		$this->db->order_by('temp', 'ASC'); // Then by temperature ascending
-		$query = $this->db->get();
-		$data = $query->result();
-						
-		// Set the response header to ensure JSON output
-		header('Content-Type: application/json');
-
-		// Echo the JSON-encoded data
-		echo json_encode($data, JSON_PRETTY_PRINT);
-		
-
-	}
-
-	public function run_solubility_correction($id){
-		$jobdetails= $this->projects_model->getJobdetails1($id);
-
-		$solu_correction = $this->projects_model->getPython();
-		$this->db->select('id, job_id, ssystem_name, known_solubility, predicted_solubility, corrected_solubility, temp, created_at');
-		$this->db->from('solubility_corrected_predicted_data');
-		$this->db->where('job_id', $id);
-		$this->db->order_by('ssystem_name', 'ASC'); // Order by system name ascending
-		$this->db->order_by('temp', 'ASC'); // Then by temperature ascending
-		$query = $this->db->get();
-		$data = $query->result();
-		if ($data) {
-			$ssh = new Net_SSH2('128.199.31.121',22);
-			if (!$ssh->login('chemistry1', 'Ravi@1234')) {
-				exit('Login Failed');
-			}
-	
-			$ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy');
-		
-			$directory = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy';
-        	// Initialize arrays for storing comma-separated values
-			$known_solubility_array = [];
-			$predicted_solubility_array = [];
-			
-			foreach ($data as $row) {
-			    $known_solubility_array[] = $row->known_solubility;
-			    $predicted_solubility_array[] = $row->predicted_solubility;
-			    
-			}
-
-			// Convert arrays to comma-separated strings
-			$known_solubility = implode(', ', $known_solubility_array);
-			$predicted_solubility = implode(', ', $predicted_solubility_array);
-
-			
-			$input_exp_data = "EXP_DATA";
-			$replace_input_exp_data = $known_solubility;
-
-			$input_pre_data = "PRE_DATA";
-			$replace_input_pre_data = $predicted_solubility;
-
-
-			$file_contents = $solu_correction[0]->solu_correction;
-			
-			$file_contents = str_replace($input_exp_data, $replace_input_exp_data, $file_contents);
-			$file_contents = str_replace($input_pre_data, $replace_input_pre_data, $file_contents);
-
-			// Escape single quotes in the file contents
-			$fileContents = str_replace("'", "'\\''", $file_contents);
-
-			//echo $file_contents;
-
-			// Execute the Python script from the variable
-			$command = 'cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src; nohup python3 -c \'' . $fileContents . '\'';
-
-			$stream = $ssh->exec($command);
-			// Check if $stream has output
-			while (empty($stream)) {
-			    // Add a delay before checking again
-			    usleep(500000); // 0.5 seconds
-
-			    // Retrieve the updated $stream
-			    $stream = $ssh->exec($command);
-			}
-			$dataj= json_decode($stream, true);
-
-			$successCount = 0;
-			if (!empty($dataj)) {
-			    foreach ($dataj as $i => $value) {
-			        $index = $i; // Assuming your index starts from 0
-
-			        // Check if the index exists in your $data array
-			        if (isset($data[$index])) {
-			            $row = $data[$index];
-
-			            // Update the record with the corresponding index from $dataj
-			            $updated_data = [
-			                'corrected_solubility' => $value,
-			            ];
-
-			            $this->db->where('id', $row->id);
-			            $result = $this->db->update('solubility_corrected_predicted_data', $updated_data);
-			            if ($result) {
-			                $successCount++;
-			            }
-
-			        } else {
-			            // Handle the case where the index does not exist in $data
-			            echo "Index $index does not exist in the data array.";
-			        }
-			    }
-			 if ($successCount == count($dataj)) {
-		        echo "Done";
-		    } else {
-		        echo "Some updates failed.";
-		    }
-    
-			} else {
-			    // Handle the case where $dataj is empty or not valid JSON
-			    echo "Error decoding JSON data from $stream.";
-			}
-	    } else {
-	        // No data found, display error message or handle accordingly
-	        echo "No data found in the table.";
-	    }
-
-	}
-	private function validateColumns($requiredColumns, $actualColumns) {
-        return empty(array_diff($requiredColumns, $actualColumns));
-    }
-
-    private function insertData($sheet) {
-        // Assuming your table name is 'excel_data'
-        $data = [];
-        foreach ($sheet->getRowIterator() as $row) {
-            $rowData = [];
-            foreach ($row->getCellIterator() as $cell) {
-                $rowData[] = $cell->getValue();
-            }
-            $data[] = $rowData;
-        }
-        $this->db->insert_batch('excel_data', $data);
-    }
-
-	public function addSolubiltiy($jobid){
-
-		$this->page_data['jobDetail'] = $this->projects_model->getJobdetails1($jobid);
-
-		$this->page_data['cdata'] = $this->projects_model->getsolvents_all();
-		$this->page_data['solubiltyData'] = $this->projects_model->solubiltyDataforCorrection($jobid);
-		$this->load->view('projects/addSolubiltiy', $this->page_data);
-
-	}
-
-	public function msave()
-	{
-		//print_r($_POST);
-	
-
-		$connection = @ssh2_connect('128.199.31.121', 22);
-		
-		$ssh = new Net_SSH2('128.199.31.121',22);
+		$ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -2020,7 +1253,82 @@ $sftp->disconnect();
 		$project_code=$this->input->post('project_code');
 		$structure=$this->input->post('structure');
 
-		$sftp = new Net_SFTP('128.199.31.121',22);
+		$sftp = new Net_SFTP('139.59.95.53',22);
+		if (!$sftp->login('chemistry1', 'Ravi@1234')) {
+    	exit('Login Failed');
+		}
+
+		$directory_path = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/'.$fname; // the path of the directory you want to check
+		
+		
+		if ($sftp->file_exists($directory_path)) { // check if the directory exists
+    	//echo "The directory $directory_path exists.";
+		$this->session->set_flashdata('alert-type', 'danger');
+		$this->session->set_flashdata('alert', 'Give Molecule Name (directory already exists on server)');
+		
+		redirect('projects/submit/'.$project_code);
+		}
+		
+		//$ssh->enablePTY();
+		//$ssh->exec('nohup ./sr1 80 4 400 400 20 &');
+		
+		chmod("/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/$fullname", 0777);
+
+		$contentf = $fname."\t".$Smile."\t".$mvalue;
+		$ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; touch '.$fullname.'; echo "'.$contentf.'" >> '.$fullname.'');
+		$ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; nohup python3 ConformerGenerator.py --structures_file '.$fullname.' --n_cores=4 > t.log 2>&1 & echo $!');
+		//$command = ('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; nohup python3 ConformerGenerator.py --structures_file '.$fullname.' --n_cores=4 > t.log 2>&1 & echo $!');
+		//$pid = $ssh->exec($command);
+
+		$id = $this->projects_model->createjob([
+			'project_id' => $project_code,
+			'structure_code' => $structure,
+			'inp_filename' => $fullname,
+			'inp_value	' => (int) $mvalue,
+			'smiles	' => $Smile,
+			'know_solubility	' => $kns,
+			'hfuss_value	' => $hfvalue,
+			'mol_weight	' => $molweight,
+			'process_start	' => date('m/d/Y h:i:s a', time()),
+			'process_end	' => '',
+			'cosmo_status	' => 'Processing',
+		]);
+
+		$this->activity_model->add('DEM File '.$fullname.' Created by User:'.logged('name'), logged('id'));
+
+
+		$this->session->set_flashdata('alert-type', 'success');
+		$this->session->set_flashdata('alert', 'Job Created Succesfully...');
+
+		redirect('projects');
+
+	}
+
+	public function msave()
+	{
+		//print_r($_POST);
+	
+
+		$connection = @ssh2_connect('139.59.95.53', 22);
+		
+		$ssh = new Net_SSH2('139.59.95.53',22);
+		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
+			exit('Login Failed');
+		}
+
+		$fname=$this->input->post('mname');
+		$mvalue=$this->input->post('mvalue');
+		$Smile=$this->input->post('Smile');
+		$kns=$this->input->post('kns');
+		$hfvalue=$this->input->post('hfvalue');
+		$molweight=$this->input->post('mweight');
+
+		$ext='.inp';
+		$fullname=$fname.$ext;
+		$project_code=$this->input->post('project_code');
+		$structure=$this->input->post('structure');
+
+		$sftp = new Net_SFTP('139.59.95.53',22);
 		if (!$sftp->login('chemistry1', 'Ravi@1234')) {
     	exit('Login Failed');
 		}
@@ -2041,8 +1349,8 @@ $sftp->disconnect();
 		
 		$contentf = $fname."\t".$Smile."\t".$mvalue;
 		$ssh->exec('cd einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; touch '.$fullname.'; echo "'.$contentf.'" >> '.$fullname.'');
-		$ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; nohup python3 ConformerGenerator.py --structures_file '.$fullname.' --n_cores=16 > t.log 2>&1 & echo $!');
-		//$command = ('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; nohup python3 ConformerGenerator.py --structures_file '.$fullname.' --n_cores=16 > t.log 2>&1 & echo $!');
+		$ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; nohup python3 ConformerGenerator.py --structures_file '.$fullname.' --n_cores=4 > t.log 2>&1 & echo $!');
+		//$command = ('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy; nohup python3 ConformerGenerator.py --structures_file '.$fullname.' --n_cores=4 > t.log 2>&1 & echo $!');
 		//$pid = $ssh->exec($command);
 
 		$id = $this->projects_model->createjob([
@@ -2099,10 +1407,10 @@ public function pure_68($id,$stype) {
 		$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 		
 
-		$connection = @ssh2_connect('128.199.31.121', 22);
+		$connection = @ssh2_connect('139.59.95.53', 22);
 		//include(APPPATH . 'third_party/phpseclib1.0.20/Net/SSH2.php');
 		
-		$ssh = new Net_SSH2('128.199.31.121',22);
+		$ssh = new Net_SSH2('139.59.95.53',22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -2113,7 +1421,7 @@ public function pure_68($id,$stype) {
 $directory = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy';
 $file = 'existing_file.py';
 
-$sftp = new Net_SFTP('128.199.31.121',22);
+$sftp = new Net_SFTP('139.59.95.53',22);
 if (!$sftp->login('chemistry1', 'Ravi@1234')) {
     exit('Login Failed');
 }
@@ -2244,11 +1552,11 @@ error_reporting(E_ALL);
 	$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 	
 
-	$connection = @ssh2_connect('128.199.31.121', 22);
+	$connection = @ssh2_connect('139.59.95.53', 22);
 	//include(APPPATH . 'third_party/phpseclib1.0.20/Net/SSH2.php');
 
 	
-	$ssh = new Net_SSH2('128.199.31.121',22);
+	$ssh = new Net_SSH2('139.59.95.53',22);
 	if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 		exit('Login Failed');
 	}
@@ -2259,7 +1567,7 @@ error_reporting(E_ALL);
 $directory = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy';
 $file = 'existing_file.py';
 
-$sftp = new Net_SFTP('128.199.31.121',22);
+$sftp = new Net_SFTP('139.59.95.53',22);
 if (!$sftp->login('chemistry1', 'Ravi@1234')) {
 exit('Login Failed');
 }
@@ -2419,11 +1727,11 @@ ini_set('display_errors', 'On');
 	$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 	
 
-	$connection = @ssh2_connect('128.199.31.121', 22);
+	$connection = @ssh2_connect('139.59.95.53', 22);
 	//include(APPPATH . 'third_party/phpseclib1.0.20/Net/SSH2.php');
 
 	
-	$ssh = new Net_SSH2('128.199.31.121',22);
+	$ssh = new Net_SSH2('139.59.95.53',22);
 	if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 		exit('Login Failed');
 	}
@@ -2434,7 +1742,7 @@ ini_set('display_errors', 'On');
 $directory = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy';
 $file = 'existing_file.py';
 
-$sftp = new Net_SFTP('128.199.31.121',22);
+$sftp = new Net_SFTP('139.59.95.53',22);
 if (!$sftp->login('chemistry1', 'Ravi@1234')) {
 exit('Login Failed');
 }
@@ -2710,7 +2018,7 @@ public function fetch_records($id) {
 
 	public function checkjob($id)
 	{
-		//$connection = @ssh2_connect('128.199.31.121', 22);
+		//$connection = @ssh2_connect('139.59.95.53', 22);
 	
 
 		//$this->projects_model->update($id, ['status' => get('status') == 'true' ? 1 : 0 ]);
@@ -2722,7 +2030,7 @@ public function fetch_records($id) {
 		$cosmofile_name=$fname."_c000.orcacosmo";
 
 
-		$sftp = new Net_SFTP('128.199.31.121',22);
+		$sftp = new Net_SFTP('139.59.95.53',22);
 		if (!$sftp->login('chemistry1', 'Ravi@1234')) {
 		exit('Login Failed');
 		}
@@ -2850,7 +2158,7 @@ echo "Successfully connected to the remote server!";
 
 	//PRE$sftp = ssh2_sftp($connection);
 
-	$command = 'cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src; python3 ConformerGenerator.py --structures_file h20.inp --n_cores=16';
+	$command = 'cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src; python3 ConformerGenerator.py --structures_file h20.inp --n_cores=4';
 $stream = ssh2_exec($connection, $command);
 stream_set_blocking($stream, true);
 $output = stream_get_contents($stream);
@@ -2879,7 +2187,7 @@ public function remote()
 public function deploy_test() {
 
 	
-	$connection = @ssh2_connect('128.199.31.121', 22);
+	$connection = @ssh2_connect('139.59.95.53', 22);
 	
 if (@ssh2_auth_password($connection, 'chemistry1', 'Ravi@1234')) {
  
@@ -2931,12 +2239,12 @@ public function sshcon()
 
 	//$this->load->library('ssh2');
 	
-	$output = ssh2_connect('128.199.31.121', 'chemistry1', 'Ravi@1234');
+	$output = ssh2_connect('139.59.95.53', 'chemistry1', 'Ravi@1234');
 	echo $output;
 exit;
 // Set the connection details
 $config = array(
-    'hostname' => '128.199.31.121',
+    'hostname' => '139.59.95.53',
     'username' => 'chemistry1',
     'password' => 'Ravi@1234'
 );
@@ -3284,7 +2592,7 @@ public function cchart()
 			$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 			
 			//$ssh = new Net_SSH2('172.16.1.148',22);
-			$ssh = new Net_SSH2('128.199.31.121',22);
+			$ssh = new Net_SSH2('139.59.95.53',22);
 			if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 				exit('Login Failed');
 			}
@@ -3503,7 +2811,7 @@ public function binary_1085_stopped($id,$stype,$temp,$sstart) {
 	$binary_py = $this->projects_model->getPython();
 	$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 	
-	$ssh = new Net_SSH2('128.199.31.121', 22);
+	$ssh = new Net_SSH2('139.59.95.53', 22);
 	if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 		exit('Login Failed');
 	}
@@ -3650,13 +2958,11 @@ public function binary_1085_stopped($id,$stype,$temp,$sstart) {
 
 		$pending_projects = $this->projects_model->getPendingProjects();
 
-		$queryJobsMaster = $this->db->query("SELECT COUNT(*) AS num_records FROM jobs_master WHERE cosmo_status = 'Processing'");
-        $numRecordsJobsMaster = $queryJobsMaster->row()->num_records;
-
-		if($pending_projects || $numRecordsJobsMaster > 0) {
+		if($pending_projects) {
 			echo "Pending"; //change to Pending to work
 		}
 		else {
+			
 		
 			if($solvent_type=="Pure_68") {
 				$this->pure_68_new($id,$solvent_type,"10");
@@ -3793,8 +3099,6 @@ public function binary_1085_stopped($id,$stype,$temp,$sstart) {
 		
 			echo "No Projects Pending";
 		}
-
-		
 		
 		}
 
@@ -3846,7 +3150,7 @@ print_r($output);
 
 			$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 			
-			$ssh = new Net_SSH2('128.199.31.121',22);
+			$ssh = new Net_SSH2('139.59.95.53',22);
 			if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 				exit('Login Failed');
 			}
@@ -3995,7 +3299,7 @@ while (empty($stream)) {
 		$binary_py = $this->projects_model->getPython();
 		$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 		
-		$ssh = new Net_SSH2('128.199.31.121', 22);
+		$ssh = new Net_SSH2('139.59.95.53', 22);
 		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 			exit('Login Failed');
 		}
@@ -4165,7 +3469,7 @@ public function tertiary_16400_new($id,$stype,$temp) {
 			$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
 			
 	
-			$ssh = new Net_SSH2('128.199.31.121',22);
+			$ssh = new Net_SSH2('139.59.95.53',22);
 			if (!$ssh->login('chemistry1', 'Ravi@1234')) {
 				exit('Login Failed');
 			}
@@ -4179,7 +3483,7 @@ public function tertiary_16400_new($id,$stype,$temp) {
 	$file = strtotime("today")*1000+rand(10000,99999).".py";
 	
 	//$sftp = new Net_SFTP('165.232.178.194',22);
-	$sftp = new Net_SFTP('128.199.31.121',22);
+	$sftp = new Net_SFTP('139.59.95.53',22);
 	//if (!$sftp->login('chemistry2', 'Ravi@1234')) {
 	if (!$sftp->login('chemistry1', 'Ravi@1234')) {
 	exit('Login Failed');
@@ -4345,448 +3649,6 @@ $item = $row['solvent1_name'];
 	}
 
 }
-
-
-public function phSolubility($id) {
-	$this->ph_solubility($id,'50');
-	$this->db->where('job_id', $id);
-	$this->db->where('solvent_type','ph_12');
-	$this->db->update('job_results_count', array('status'=>'Completed'));
-
-	$this->ph_solubility($id,'25');
-	$this->db->where('job_id', $id);
-	$this->db->where('solvent_type','ph_12');
-	$this->db->update('job_results_count', array('status'=>'Completed'));
-
-	$this->ph_solubility($id,'10');
-	$this->db->where('job_id', $id);
-	$this->db->where('solvent_type','ph_12');
-	$this->db->update('job_results_count', array('status'=>'Completed'));
-
-}
-
-/*---------------------Ph SOLUBILITY-----------------------------------*/
-public function ph_solubility($id,$temp) {
-		
-		
-		if($temp=="10") {
-			$temparature="283.15";
-			$temp10="10";
-			$temp20="";
-			$temp50="";
-		}
-		if($temp=="25") {
-			$temparature="298.15";
-			$temp10="";
-			$temp20="25";
-			$temp50="";
-		}
-		
-		else if ($temp=="50") {
-			$temparature="323.15";
-			$temp10="";
-			$temp20="";
-			$temp50="50";
-		}
-	
-
-		$info="";
-		$jobdetails= $this->projects_model->getJobdetails1($id);
-
-		$python_command = $this->projects_model->getPython();
-
-		$fname = pathinfo($jobdetails[0]->inp_filename, PATHINFO_FILENAME);
-		
-		$ssh = new Net_SSH2('128.199.31.121',22);
-		if (!$ssh->login('chemistry1', 'Ravi@1234')) {
-			exit('Login Failed');
-		}
-
-		$ssh->exec('cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy');
-
-		$directory = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy';
-
-		$file = strtotime("today")*1000+rand(10000,99999).".py";
-
-		// Define file path and contents
-		$file_path = '/home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src/opencosmorspy/'.$file;
-
-		// Open file and print contents
-		if ($contents = $python_command[0]->ph_sc ) {
-			$jid = $this->projects_model->addactivity_log([
-				'job_id' => $jobdetails[0]->id,
-				'solvent_type' => 'ph_12',
-				'tempr' => $temp,
-				'solvents_count' => 14,
-				'solvent_activity_finished' => '',
-				'process_start	' => date('m/d/Y h:i:s a', time()),
-				'status' => 'Pending'
-			
-			]);
-
-			$input_string = "INPUT_COSMO";
-			$replace_input_string= "['opencosmorspy/".$fname."/COSMO_TZVPD/".$fname."_c000.orcacosmo']";
-			// Read file contents
-
-			$input_temp = "TEMPR";
-			$replace_input_temp = $temparature;
-
-			$file_contents = $python_command[0]->ph_sc;
-			
-			// Replace search string with replace string
-			$file_contents = str_replace($input_string, $replace_input_string, $file_contents);
-			$file_contents = str_replace($input_temp, $replace_input_temp, $file_contents);
-
-
-			// Escape single quotes in the file contents
-			$fileContents = str_replace("'", "'\\''", $file_contents);
-
-			//echo $file_contents;
-
-			// Execute the Python script from the variable
-			$command = 'cd /home/chemistry1/einnel/opencosmos/openCOSMO-RS_py/src; nohup python3 -c \'' . $fileContents . '\'';
-
-
-			$stream = $ssh->exec($command);
-			
-
-			// Check if $stream has output
-			while (empty($stream)) {
-			    // Add a delay before checking again
-			    usleep(500000); // 0.5 seconds
-
-			    // Retrieve the updated $stream
-			    $stream = $ssh->exec($command);
-			}
-
-			$dataj= json_decode($stream, true);
-			dd($stream);
-
-			// Accessing the value for "data1"
-			$name = $dataj['name'];
-			$data1 = $dataj['data']['data1'];
-			$data2 = $dataj['data']['data2'];
-			
-			$id = $this->projects_model->createjobresults([
-				'job_id' => $jobdetails[0]->id,
-				's_id' => $row['s_id'],
-				'solvents' => $name,
-				'result_type' => 'ph_12',
-				'pure_data1' => $data1[0] . ", " . $data1[1] . ", " . $data1[2] . ", " . $data1[3] ,
-				'pure_data2' => $data2[0] . ", " . $data2[1] . ", " . $data1[2] . ", " . $data1[3] ,
-				'input_temp_10' => $temp10,
-				'input_temp_20' => $temp20,
-				'input_temp_50	' => $temp50,
-				'solvent_result_name	' =>$fname,
-				'solvent_result	' => $stream,
-				'processed_on	' => date('m/d/Y h:i:s a', time()),
-			]);
-		
-			$this->db->where('id', $id);
-			$this->db->update('job_results_count', array('solvent_activity_finished'=>3,'process_end'=>date('m/d/Y h:i:s a', time())));
-			
-			/*if(count($solvents_master)==$i+1) {
-				$this->db->where('id', $id);
-				$this->db->update('job_results_count', array('status'=>'Completed'));
-		
-			}*/
-		
-			
-
-			$file_contents = str_replace($replace_input_string, $input_string, $file_contents);
-			$file_contents = str_replace($replace_input_temp, $input_temp, $file_contents);
-			
-			
-			// Close connection
-			$ssh->disconnect();
-			//$sftp->disconnect();
-		} else {
-			exit('File open failed');
-		}
-	
-	
-	}
-	public function generatePdf($id)
-	{
-		set_time_limit(120);
-		ini_set('max_exection_time', 60);
-		ini_set("pcre.backtrack_limit", "50000000");
-		$this->page_data['cdata'] =  $this->projects_model->getDataForPdf($id);
-		$this->page_data['jobDetail'] = $this->projects_model->getJobDetail($id);
-		$project_details = $this->projects_model->getById($this->page_data['jobDetail']->project_id);
-		// $this->page_data['solventData'] = $this->projects_model->getresultsdata($id);
-		$mpdf = new \Mpdf\Mpdf();
-		$html = $this->load->view('projects/pdf',$this->page_data,true);
-		$mpdf->WriteHTML($html);
-		$pdfFilename = $project_details->{'project_name'}.".pdf";
-		$mpdf->Output($pdfFilename, "D");     
-	}	
-	public function generateExcel($id)
-	{
-		set_time_limit(120);
-		$this->page_data['cdata'] =  $this->projects_model->getDataForExcel($id);
-		// dd($this->page_data['cdata'][0]['result_job_id']);
-		$this->page_data['jobDetail'] = $this->projects_model->getJobDetail($id);
-		$project_details = $this->projects_model->getById($this->page_data['jobDetail']->project_id);
-		$file_name = $project_details->{'project_name'}.'.xlsx';
-
-		$spreadsheet = new Spreadsheet();
-
-		$sheet = $spreadsheet->getActiveSheet();
-		$from = "A1"; // or any value
-		$to = "A11"; // or any value
-		$sheet->getStyle("$from:$to")->getFont()->setBold( true );
-
-		$from1 = "A17"; // or any value
-		$to1 = "Q17"; // or any value
-		$sheet->getStyle("$from1:$to1")->getFont()->setBold( true );
-
-		$sheet->getStyle("B12")->getFont()->setBold( true );
-		$sheet->getStyle("C12")->getFont()->setBold( true );
-		$sheet->getStyle("D12")->getFont()->setBold( true );
-
-		$sheet->getStyle("C12")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID) ->getStartColor()->setARGB('00a0bfe0');
-		$sheet->getStyle("D12")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID) ->getStartColor()->setARGB('00a0bfe0');
-		$sheet->getStyle("$from1:$to1")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID) ->getStartColor()->setARGB('00a0bfe0');
-
-		$sheet->setCellValue('A1', 'Project Name');
-		$sheet->setCellValue('B1', '');
-		$sheet->setCellValue('C1', $project_details->{'project_name'});
-
-		$sheet->setCellValue('A2', 'Developed By');
-		$sheet->setCellValue('B2', '');
-		$sheet->setCellValue('C2', 'PharmaDEM Solutions Logo');
-
-		$sheet->setCellValue('A3', 'Job Submission Date');
-		$sheet->setCellValue('B3', '');
-		$sheet->setCellValue('C3', $this->page_data['jobDetail']->process_start);
-
-		$sheet->setCellValue('A4', 'Submitted By');
-		$sheet->setCellValue('B4', '');
-		$sheet->setCellValue('C4', 'Ravi');
-
-		$sheet->setCellValue('A5', 'Api Name');
-		$sheet->setCellValue('B5', '');
-		$sheet->setCellValue('C5', $project_details->{'project_name'});
-
-		$sheet->setCellValue('A6', 'Expt Imformation');
-		$sheet->setCellValue('B6', '');
-		$sheet->setCellValue('C6', 'hfuss_value = '.$this->page_data['jobDetail']->hfuss_value);
-		
-
-		$sheet->setCellValue('A7', '');
-		$sheet->setCellValue('B7', '');
-		$sheet->setCellValue('C7', 'MP = ');
-
-		$sheet->setCellValue('A8', '');
-		$sheet->setCellValue('B8', '');
-		$sheet->setCellValue('C8', 'MW = '.$this->page_data['jobDetail']->mol_weight);
-
-		$sheet->setCellValue('A9', 'Known Solubility Imformation');
-		$sheet->setCellValue('B9', '');
-		$sheet->setCellValue('C9', $this->page_data['jobDetail']->know_solubility);
-
-		$sheet->setCellValue('A10', 'Structure Smiles');
-		$sheet->setCellValue('B10', '');
-		$sheet->setCellValue('C10', $this->page_data['jobDetail']->structure_code.' '.$this->page_data['jobDetail']->smiles);
-
-		$sheet->setCellValue('A11', 'General Notes');
-		$sheet->setCellValue('B11', '');
-		$sheet->setCellValue('C11', 'PharmaDEM Solutions Logo');
-
-		$sheet->setCellValue('A12', '');
-		$sheet->setCellValue('B12', 'Solubility Class');
-		$sheet->setCellValue('C12', 'Category');
-		$sheet->setCellValue('D12', 'Mg/ml');
-
-		$sheet->setCellValue('A13', '');
-		$sheet->setCellValue('B13', '');
-		$sheet->setCellValue('C13', 'Highly Soluble');
-		$sheet->setCellValue('D13', '>100');
-
-		$sheet->setCellValue('A14', '');
-		$sheet->setCellValue('B14', '');
-		$sheet->setCellValue('C14', 'Soluble');
-		$sheet->setCellValue('D14', '50 to 100');
-
-		$sheet->setCellValue('A15', '');
-		$sheet->setCellValue('B15', '');
-		$sheet->setCellValue('C15', 'Moderate');
-		$sheet->setCellValue('D15', '10 to 50');
-
-		$sheet->setCellValue('A16', '');
-		$sheet->setCellValue('B16', '');
-		$sheet->setCellValue('C16', 'Insoluble');
-		$sheet->setCellValue('D16', '<10');
-
-		$sheet->setCellValue('A17', 'Solvent Id');
-		$sheet->setCellValue('B17', 'Solvent System');
-		$sheet->setCellValue('C17', 'Solvent 1');
-		$sheet->setCellValue('D17', 'Solvent 2');
-		$sheet->setCellValue('E17', 'Solvent 3');
-		$sheet->setCellValue('F17', 'Comp 1');
-		$sheet->setCellValue('G17', 'Comp 2');
-		$sheet->setCellValue('H17', 'Comp 3');
-		$sheet->setCellValue('I17', '10CMGML');
-		$sheet->setCellValue('J17', '10CVL');
-		$sheet->setCellValue('K17', '10CYL');
-		$sheet->setCellValue('L17', '25CMGML');
-		$sheet->setCellValue('M17', '25CVL');
-		$sheet->setCellValue('N17', '25CYL');
-		$sheet->setCellValue('O17', '50CMGML');
-		$sheet->setCellValue('P17', '50CVL');
-		$sheet->setCellValue('Q17', '50CYL');
-
-		$count = 18;
-
-		foreach($this->page_data['cdata'] as $key=>$value)
-		{
-			// $solvent = $this->projects_model->getSolventDataBySid($value['result_job_id']);
-			$sheet->setCellValue('A' . $count, $key + 1);
-			$sheet->setCellValue('B' . $count, $value['Solvent_System']);
-			$sheet->setCellValue('C' . $count, $value['Solvent_1']);
-			$sheet->setCellValue('D' . $count, $value['Solvent_2']);
-			$sheet->setCellValue('E' . $count, $value['Solvent_3']);
-			$sheet->setCellValue('F' . $count, $value['Comp_1']);
-			$sheet->setCellValue('G' . $count, $value['Comp_2']);
-			$sheet->setCellValue('H' . $count, $value['Comp_3']);
-			$sheet->setCellValue('I' . $count,  number_format(((float)$value['10_cmgml']),2,'.',''));
-			$sheet->setCellValue('J' . $count, number_format(((float)$value['10_cvl']),2,'.',''));
-			$sheet->setCellValue('K' . $count, number_format(((float)$value['10_cyl']),2,'.',''));
-			$sheet->setCellValue('L' . $count,  number_format(((float)$value['25_cmgml']),2,'.',''));
-			$sheet->setCellValue('M' . $count, number_format(((float)$value['25_cvl']),2,'.',''));
-			$sheet->setCellValue('N' . $count, number_format(((float)$value['25_cyl']),2,'.',''));
-			$sheet->setCellValue('O' . $count,  number_format(((float)$value['50_cmgml']),2,'.',''));
-			$sheet->setCellValue('P' . $count, number_format(((float)$value['50_cvl']),2,'.',''));
-			$sheet->setCellValue('Q' . $count, number_format(((float)$value['50_cyl']),2,'.',''));
-			$count++;
-		}
-
-		$writer = new Xlsx($spreadsheet);
-
-		$writer->save($file_name);
-
-		header("Content-Type: application/vnd.ms-excel");
-
-		header('Content-Disposition: attachment; filename="' . basename($file_name) . '"');
-
-		header('Expires: 0');
-
-		header('Cache-Control: must-revalidate');
-
-		header('Pragma: public');
-
-		header('Content-Length:' . filesize($file_name));
-
-		flush();
-
-		readfile($file_name);
-
-		exit;   
-	}	
-	
-	public function generateCsv()
-	{
-		set_time_limit(120);
-
-		$selectedProjects = [3,1,2];
-
-		$data = [];
-
-		if (!empty($selectedProjects)) {
-			foreach ($selectedProjects as $projectId) {
-		        // Fetch data for $projectId using your queries
-						$jbd = $this->projects_model->getJobDetail($projectId);
-		        // Define arrays to hold results for each table for the current project
-				$results_10 = [];
-				$results_25 = [];
-				$results_50 = [];
-		        $solvent_w1_system = []; // Initialize an array to hold solvent_w1_solvent_system values
-
-		        // Loop through the three tables
-		        $tables = ['results_data_10', 'results_data_25', 'results_data_50'];
-		        foreach ($tables as $table) {
-		            // Create a new query for each table
-		        	$this->db->select('
-		        		' . $table . '.*, 
-		        		job_results.s_id AS job_s_id, job_results.id AS job_res_id,
-		        		solvents_master.w1_solvent_system AS solvent_w1_solvent_system
-		        		');
-		        	$this->db->from($table);
-		        	$this->db->join('job_results', 'job_results.id = ' . $table . '.result_job_id', 'left');
-		        	$this->db->join('solvents_master', 'solvents_master.s_id = job_results.s_id', 'left');
-		        	$this->db->where($table . '.job_id', $jbd->id);
-		            //$this->db->limit(10);
-
-		            // Execute the query and append results to the respective array
-		        	$query = $this->db->get();
-		        	$results = $query->result();
-		            //print_r($this->db->last_query());    
-		        	if ($table === 'results_data_10') {
-		        		$results_10 = $results;
-		        	} elseif ($table === 'results_data_25') {
-		        		$results_25 = $results;
-		        	} elseif ($table === 'results_data_50') {
-		        		$results_50 = $results;
-		        	}
-
-		            // Extract solvent_w1_solvent_system values and store them in the solvent_w1_system array
-		        	$solvent_w1_system = array_column($results, 'solvent_w1_solvent_system');
-		        }
-
-		        // Check if solvent_w1_solvent_system exists in all three arrays
-		        if (!empty($solvent_w1_system) && count(array_filter($solvent_w1_system)) === count($solvent_w1_system)) {
-		            // Get the project name
-		        	$projectName = $this->projects_model->getProjectName($projectId);
-
-		        	foreach ($solvent_w1_system as $index => $solvent) {
-		        		$data[$solvent][$projectName] = [
-		        			'result_10' => $results_10[$index]->{'10cmgml'},
-		        			'result_25' => $results_25[$index]->{'25cmgml'},
-		        			'result_50' => $results_50[$index]->{'50cmgml'},
-		        		];
-		        	}
-		        }
-		    }
-		}
-		// dd($data);
-
-		// Generate CSV data
-
-		$delimiter = ','; // Define the delimiter
-
-		$csvData = "Solvent Name" . $delimiter;
-		$projects = array_keys($data[array_key_first($data)]);
-		foreach ($projects as $project) {
-		    $csvData .= "$project-Result 10{$delimiter}$project-Result 25{$delimiter}$project-Result 50{$delimiter}";
-		}
-		$csvData = rtrim($csvData, $delimiter) . "\n";
-		foreach ($data as $solvent => $projects) {
-		    // Encapsulate entire CSV field containing the solvent name in double quotes
-		    $csvData .= '"' . str_replace('"', '""', $solvent) . '"' . $delimiter;
-		    foreach ($projects as $project => $results) {
-		        $csvData .= "{$results['result_10']}{$delimiter}{$results['result_25']}{$delimiter}{$results['result_50']}{$delimiter}";
-		    }
-		    $csvData = rtrim($csvData, $delimiter) . "\n";
-		}
-
-		// Set headers for CSV download
-		header('Content-Type: application/csv');
-		header('Content-Disposition: attachment; filename="project_results.csv"');
-
-		// Output CSV data
-		echo $csvData;
-	}
-
-
-	public function solubilityCorrection($id) {
-
-      	$this->page_data['jstatus'] = $this->projects_model->getJobdetails($id);
-        $this->load->view('projects/solubility_correction', $this->page_data);
-     
-     }
-
-
 
 }
 

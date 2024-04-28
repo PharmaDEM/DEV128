@@ -7,7 +7,7 @@ class SSH extends CI_Model {
     
     public function __construct() {
         // Replace with your SSH server credentials
-        $host = '128.199.31.121';
+        $host = '139.59.95.53';
         $port = 22;
         $username = 'chemistry1';
         $password = 'Ravi@1234';

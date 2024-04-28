@@ -39,7 +39,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
               <i class="ionicons ion-ios-contact-outline"></i>
               </div>
 
-              <a href="<?php echo url('customers') ?>" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
           <!-- ./col -->
@@ -54,7 +54,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
               <div class="icon">
               <i class="ionicons ion-settings"></i>
               </div>
-              <a href="<?php echo url('projects') ?>" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
           <!-- ./col -->
@@ -79,22 +79,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
               
               <i class="ionicons ion-ios-timer-outline"></i>
               </div>
-              <a href="<?php echo url('projects?type=progress') ?>" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-          </div>
-          <div class="col-lg-3 col-6">
-            <!-- small box -->
-            <div class="small-box bg-danger">
-              <div class="inner">
-               
-                <h3><?php echo $pendingDMFileJobCount; ?></h3>
-               DM File in Process
-              </div>
-              <div class="icon">
-                <i class="ion ion-pie-graph"></i>
-              </div>
-
-              <a href="<?php echo url('projects?type=dmfile') ?>" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
           <!-- ./col -->
@@ -129,7 +114,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                 <i class="ion ion-clock"></i>
               </div>
 
-              <a href="<?php echo url('projects?type=queue') ?>" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
           <!-- ./col -->
@@ -147,7 +132,7 @@ defined('BASEPATH') OR exit('No direct script access allowed'); ?>
                 <i class="ion ion-clock"></i>
               </div>
 
-              <a href="<?php echo url('users') ?>" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
+              <a href="#" class="small-box-footer"><?php echo lang('dashboard_more_info');?><i class="fas fa-arrow-circle-right"></i></a>
             </div>
           </div>
           <!-- ./col -->

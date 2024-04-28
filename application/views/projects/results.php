@@ -173,8 +173,8 @@ Stats
      //echo $getPendingpatches;
      if($getPendingpatches) {
 ?>
-<div id="patch" style="color:red">Job is running  </div>
-<!-- <input id = "btnSubmit" class="btn btn-primary" type="button" value="Re-Process Empty Outputs"/> -->
+<div id="patch" style="color:red">Patch need for <?php echo $getPendingpatches; ?></div>
+<input id = "btnSubmit" class="btn btn-primary" type="button" value="Re-Process Empty Outputs"/>
 <?php } ?>
 
 

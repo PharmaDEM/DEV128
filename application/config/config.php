@@ -28,7 +28,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 // $config['base_url'] .=  "://".$_SERVER['HTTP_HOST'];
 // $config['base_url'] .=  str_replace(basename($_SERVER['SCRIPT_NAME']),"",$_SERVER['SCRIPT_NAME']);
 
-$config['base_url'] = "http://128.199.31.121/";
+$config['base_url'] = "http://139.59.95.53/";
 
 
 //$config['index_page'] = "index.php";
@@ -90,7 +90,6 @@ $config['url_suffix'] = '';
 |
 */
 $config['language']	= 'en';
-$config['max_execution_time'] = 1024;
 
 /*
 |--------------------------------------------------------------------------
@@ -154,11 +153,7 @@ $db['default']['save_queries'] = FALSE;
 | Note: This will NOT disable or override the CodeIgniter-specific
 |	autoloading (application/config/autoload.php)
 */
-//$config['composer_autoload'] = FALSE;
-
-
-$config['composer_autoload'] = TRUE;
-$config['composer_autoload'] = 'vendor/autoload.php';
+$config['composer_autoload'] = FALSE;
 
 /*
 |--------------------------------------------------------------------------
